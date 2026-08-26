@@ -1,0 +1,15 @@
+{
+  "ruptura": {
+    "vendas_periodo": {
+      "modo": "dias",
+      "dias": 365,
+      "data_inicio": null,
+      "data_fim": null
+    },
+    "situacao_entrada": "PENDENTE",
+    "operacao_entrada": "Entrada por COMPRA",
+    "permitecompra": "A",
+    "permitevenda": "A",
+    "pro_status": "A"
+  }
+}
