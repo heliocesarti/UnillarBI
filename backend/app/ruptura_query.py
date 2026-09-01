@@ -411,22 +411,23 @@ def compute_dynamic(base, dias, filial=None):
             "itens": None,
         })
 
-    # "Aglutinar" — reescrito em 28/08/2026 (2ª mudança de regra do dia,
-    # pedida depois que o usuário viu produtos do grupo Piso com a MESMA
-    # descrição de 3 palavras aparecendo soltos): família agora agrupa por
-    # SEMELHANÇA DE DESCRIÇÃO PURA, sem exigir que alguém tenha algo
-    # chegando — TODO produto ativo do mesmo grupo com as mesmas 3
-    # primeiras palavras da descrição entra na mesma família, mesmo que
-    # não tenha entrada/pedido pendente e mesmo que não venda nada no
-    # período (por isso usa `ativos`/`_info_produto` direto, não
-    # `produtos_list`, que já filtra vendas<=0). Só fica individual quem
-    # não tem NENHUM outro produto parecido — nem em ruptura, nem fora.
+    # "Aglutinar" — reescrito em 28/08/2026: família agrupa por SEMELHANÇA
+    # DE DESCRIÇÃO PURA, sem exigir que alguém esteja em risco. Restringido
+    # em 01/09/2026: membro da família agora precisa ter vendido no
+    # período — antes usava `ativos` (todo produto ativo do grupo, mesmo
+    # sem nenhuma venda), e uma família de prefixo genérico (ex: "VENT
+    # MESA", que casa com dezenas de ventiladores diferentes) acabava
+    # trazendo produto que nunca vendeu só por existir no cadastro com
+    # aquele prefixo — usuário viu isso acontecer (produto 45554, "VENT
+    # MESA 30CM...", 0 venda no período, mas apareceu dentro da família
+    # mesmo assim). Trocado `ativos` por `produtos_list` (já filtrado por
+    # vendas>0 no período) como fonte dos membros.
     produtos_por_familia = defaultdict(list)
-    for cod in ativos:
-        cadastro = produtos_cadastro.get(cod, {})
+    for p in produtos_list:
+        cadastro = produtos_cadastro.get(p["cod"], {})
         prefixo = _prefixo3(cadastro.get("desc", ""))
         if prefixo:
-            produtos_por_familia[(cadastro.get("grupo", "SEM GRUPO"), prefixo)].append(cod)
+            produtos_por_familia[(cadastro.get("grupo", "SEM GRUPO"), prefixo)].append(p["cod"])
 
     anchors_por_chave = defaultdict(list)
     produtos_sem_familia = []
@@ -450,8 +451,9 @@ def compute_dynamic(base, dias, filial=None):
     linhas_agrupadas = []
     for chave in anchors_por_chave:
         grupo_chave, prefixo_chave = chave
-        # TODOS os produtos da chave (não só os que estão em ruptura) —
-        # a soma representa a família inteira, igual pedido pelo usuário.
+        # Todos os produtos da chave que venderam no período (não só os que
+        # estão em ruptura) — a soma representa a família de quem vendeu,
+        # sem trazer produto parado que só bate o prefixo da descrição.
         membros = [_info_produto(cod) for cod in produtos_por_familia[chave]]
 
         vendas_f = sum(m["totalVendas"] for m in membros)
