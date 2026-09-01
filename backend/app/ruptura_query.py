@@ -10,9 +10,12 @@ Uma linha por produto (a tabela oficial não quebra por loja). Pontos-chave:
     restrito a uma filial quando o filtro de Filial da tela seleciona uma
     loja específica (o estoque continua sendo o da rede mesmo assim, já
     que `z_dw_003` não tem como ser filtrado por filial).
-  - Entradas/Pedidos pendentes são sempre da rede inteira, sem corte de
-    data na quantidade (só a "data mais antiga" usada pra dias de atraso
-    tem corte, pra não pegar lixo histórico de anos atrás).
+  - Entradas/Pedidos pendentes são sempre da rede inteira. A quantidade
+    tem corte de data configurável (`entrada_periodo`/`pedido_periodo`,
+    janela de emissão do documento — padrão 1 ano, igual à regra original
+    do usuário) — além disso, a "data mais antiga" usada pra dias de
+    atraso tem seu próprio corte fixo, independente, pra não pegar lixo
+    histórico de anos atrás.
   - Todo produto com Total_Vendas_Dinamico <= 0 no período é sempre "Sem
     risco" — é o "Leão de Chácara" que trava Estoque/Entradas/Pedidos/
     Atrasos em BLANK no DAX original.
@@ -48,10 +51,6 @@ RISCO_KEYS = {
     "MEDIA": "media",
     "SEM RISCO": "sem-risco",
 }
-
-# Situação dos itens de pedido considerados "pendentes" (medida
-# Pedidos_Pendentes) — trava fixa vinda do DAX, não é mais configurável.
-SITUACOES_ITEM_PEDIDO = ["NÃO ENTREGUE", "PARCIAL"]
 
 # Cortes de data usados só pra calcular "dias de atraso" (não afetam a
 # quantidade pendente, que é sempre sem corte) — evita que uma nota de
@@ -115,10 +114,21 @@ def compute_base():
 
     cfg = get_config("ruptura")
     data_ini_vendas, data_fim_vendas = resolve_periodo(cfg["vendas_periodo"])
+    data_ini_entrada, data_fim_entrada = resolve_periodo(cfg["entrada_periodo"])
+    data_ini_pedido, data_fim_pedido = resolve_periodo(cfg["pedido_periodo"])
 
     def get_ativos():
+        # Produto sem NENHUMA linha em z_dw_006 (zerado em todo local/filial
+        # da rede) não tem como bater permitecompra/permitevenda — ficava
+        # excluído da Ruptura por omissão, mesmo sendo ativo (pro_status) e
+        # com venda real no período: é exatamente o caso mais grave que a
+        # tela deveria pegar (zerado + ainda vendendo). Corrigido em
+        # 01/09/2026: quem não aparece em z_dw_006 entra por padrão aqui —
+        # a 3ª trava (pro_status) logo abaixo continua valendo do mesmo jeito.
         rows = _fetch_rows(
-            "SELECT DISTINCT codigoproduto FROM z_dw_006 WHERE permitecompra = %s AND permitevenda = %s;",
+            "SELECT DISTINCT codigoproduto FROM z_dw_006 WHERE permitecompra = %s AND permitevenda = %s "
+            "UNION "
+            "SELECT produto_codigo FROM z_dw_011 WHERE produto_codigo NOT IN (SELECT DISTINCT codigoproduto FROM z_dw_006);",
             (cfg["permitecompra"], cfg["permitevenda"]),
         )
         return sorted({str(r[0]) for r in rows})
@@ -162,15 +172,19 @@ def compute_base():
         return dict(res)
 
     def get_entradas():
-        # Medida Entradas_Pendentes (quantidade, sem corte de data) +
-        # menor data_entrada só entre 2024 em diante (pra Dias_Atraso_Entrada).
+        # Medida Entradas_Pendentes: quantidade só das notas emitidas
+        # dentro da janela `entrada_periodo` (config — regra original do
+        # usuário, restaurada em 28/08/2026, corte em `data_emissao`) +
+        # menor `data_entrada` só entre 2024 em diante (pra
+        # Dias_Atraso_Entrada — guarda independente, campo de data diferente).
         rows = _fetch_rows(
             "SELECT i.codigo_produto, SUM(i.quantidade), MIN(CASE WHEN c.data_entrada >= %s THEN c.data_entrada END) "
             "FROM z_dw_026_itens i "
             "JOIN z_dw_026_capas c ON c.chave_entrada = i.chave_entrada AND c.filial_entrada = i.filial_entrada "
             "WHERE c.situacao = %s AND c.operacao_entrada = %s "
+            "AND c.data_emissao >= %s AND c.data_emissao <= %s "
             "GROUP BY i.codigo_produto;",
-            (DATA_CORTE_ENTRADA, cfg["situacao_entrada"], cfg["operacao_entrada"]),
+            (DATA_CORTE_ENTRADA, cfg["situacao_entrada"], cfg["operacao_entrada"], data_ini_entrada, data_fim_entrada),
         )
         res = {}
         for cod, qtd, data_min in rows:
@@ -178,16 +192,25 @@ def compute_base():
         return res
 
     def get_pedidos():
-        # Medida Pedidos_Pendentes (quantidade_itens, sem corte de data,
-        # baseado em situacao_item do próprio item) + menor data_previsao
-        # só depois de 2015 (pra Dias_Atraso_Pedido).
+        # Medida Pedidos_Pendentes = SALDO A ENTREGAR (quantidade_itens -
+        # quantidade_entregue), não a quantidade original do pedido — um
+        # pedido PARCIAL já entregue em parte só deve contar o que falta.
+        # Quantidade só dos pedidos emitidos dentro da janela
+        # `pedido_periodo` (config, corte em `data_emissao` — mesmo
+        # princípio da Entrada acima), baseado em situacao_item do
+        # próprio item (lista configurável pela tela, ver
+        # `situacoes_pedido_pendente`); menor data_previsao só depois de
+        # 2015 (pra Dias_Atraso_Pedido — guarda independente). Guarda
+        # extra "quantidade_itens > quantidade_entregue" evita linha com
+        # saldo zerado/negativo por inconsistência de status entrar na soma.
         rows = _fetch_rows(
-            "SELECT i.codigo_produto, SUM(i.quantidade_itens), MIN(CASE WHEN c.data_previsao > %s THEN c.data_previsao END) "
+            "SELECT i.codigo_produto, SUM(i.quantidade_itens - i.quantidade_entregue), MIN(CASE WHEN c.data_previsao > %s THEN c.data_previsao END) "
             "FROM z_dw_029_itens i "
             "JOIN z_dw_029_capas c ON c.chave_pedido = i.chave_pedido AND c.filial_pedido = i.filial_pedido "
-            "WHERE i.situacao_item = ANY(%s) "
+            "WHERE i.situacao_item = ANY(%s) AND i.quantidade_itens > i.quantidade_entregue "
+            "AND c.data_emissao >= %s AND c.data_emissao <= %s "
             "GROUP BY i.codigo_produto;",
-            (DATA_CORTE_PEDIDO, SITUACOES_ITEM_PEDIDO),
+            (DATA_CORTE_PEDIDO, cfg["situacoes_pedido_pendente"], data_ini_pedido, data_fim_pedido),
         )
         res = {}
         for cod, qtd, data_min in rows:
@@ -274,10 +297,29 @@ def compute_dynamic(base, dias, filial=None):
     locais_db = base.get("locais_db", {})
 
     filtro_filial = None if (not filial or filial == "todas") else str(int(filial))
+    aglutinar_n_palavras = get_config("ruptura").get("aglutinar_prefixo_palavras", 3)
 
-    produtos_list = []
+    def _vendas_no_periodo(cod):
+        total = 0.0
+        for venda in vendas_db.get(cod, []):
+            if venda["dias_atras"] <= dias and (not filtro_filial or venda["filial"] == filtro_filial):
+                total += venda["qtd"]
+        return total
 
-    for cod in ativos:
+    def _prefixo3(desc):
+        # "TIJOLO 8 FUROS IMPERIAL" -> "TIJOLO 8 FUROS" (com N=3, o padrão)
+        # — usado pra detectar quando vários produtos são o MESMO item em
+        # marcas/variações diferentes (não é o critério de "mesmo grupo",
+        # que é mais largo). N de palavras vem de `aglutinar_prefixo_palavras`.
+        palavras = (desc or "").split()
+        return " ".join(palavras[:aglutinar_n_palavras]).strip()
+
+    # Info bruta de UM produto ativo — não decide risco nem filtra por
+    # venda>0 (isso é feito por quem chama). Reusada tanto pra montar a
+    # tabela principal quanto pra montar os membros de uma família de
+    # Aglutinar (que agora pode incluir produto sem nenhuma venda/pendente,
+    # só por bater a descrição — ver bloco de família mais abaixo).
+    def _info_produto(cod):
         cadastro = produtos_cadastro.get(cod, {})
         estoque = estoque_rede.get(cod, 0.0)
 
@@ -289,16 +331,6 @@ def compute_dynamic(base, dias, filial=None):
         pedidos = ped.get("qtd", 0.0)
         dias_pedido = _dias_atraso(_safe_date(ped.get("data_min")), limite_max=1500)
 
-        vendas = 0.0
-        for venda in vendas_db.get(cod, []):
-            if venda["dias_atras"] <= dias and (not filtro_filial or venda["filial"] == filtro_filial):
-                vendas += venda["qtd"]
-
-        if vendas <= 0:
-            continue  # Leão de Chácara: sem venda no período, sempre Sem Risco — não entra na tabela
-
-        projecao, status = _avaliar(estoque, vendas, entradas, pedidos, dias_pedido, dias_entrada)
-
         locais = set()
         if filtro_filial:
             locais.update(locais_db.get(filtro_filial, {}).get(cod, []))
@@ -306,7 +338,7 @@ def compute_dynamic(base, dias, filial=None):
             for fil, cod_dict in locais_db.items():
                 locais.update(cod_dict.get(cod, []))
 
-        produtos_list.append({
+        return {
             "cod": cod,
             "desc": cadastro.get("desc", ""),
             "marca": cadastro.get("marca", ""),
@@ -314,15 +346,26 @@ def compute_dynamic(base, dias, filial=None):
             "grupo": cadastro.get("grupo", "SEM GRUPO"),
             "subgrupo": cadastro.get("subgrupo", "SEM SUBGRUPO"),
             "estoqueAtual": estoque,
-            "totalVendas": vendas,
+            "totalVendas": _vendas_no_periodo(cod),
             "totalEntradaPend": entradas,
             "totalPedidosPend": pedidos,
             "diasPedidosPend": dias_pedido,
             "diasPendEntrada": dias_entrada,
-            "projecao": projecao,
-            "status": status,
             "locais": sorted(locais),
-        })
+        }
+
+    produtos_list = []
+
+    for cod in ativos:
+        info = _info_produto(cod)
+        if info["totalVendas"] <= 0:
+            continue  # Leão de Chácara: sem venda no período, sempre Sem Risco — não entra na tabela
+
+        projecao, status = _avaliar(
+            info["estoqueAtual"], info["totalVendas"], info["totalEntradaPend"],
+            info["totalPedidosPend"], info["diasPedidosPend"], info["diasPendEntrada"],
+        )
+        produtos_list.append({**info, "projecao": projecao, "status": status})
 
     em_risco = [p for p in produtos_list if p["status"] != "SEM RISCO"]
 
@@ -351,6 +394,116 @@ def compute_dynamic(base, dias, filial=None):
     produtos_tabela = sorted(produtos_list, key=lambda p: (SEVERITY_ORDER[p["status"]], -p["projecao"]))
     locais_catalogo = sorted({loc for p in produtos_tabela for loc in p["locais"]})
 
+    produtos_saida = []
+    for p in produtos_tabela:
+        produtos_saida.append({
+            "cod": p["cod"], "rowId": p["cod"],
+            "desc": p["desc"], "marca": p["marca"],
+            "departamento": p["departamento"], "grupo": p["grupo"], "subgrupo": p["subgrupo"],
+            "vendas": p["totalVendas"], "estoque": p["estoqueAtual"],
+            "entrada": p["totalEntradaPend"], "risco": RISCO_KEYS[p["status"]],
+            "locais": p["locais"],
+            "pedidos": p["totalPedidosPend"],
+            "diasPedidosPend": p["diasPedidosPend"],
+            "diasPendEntrada": p["diasPendEntrada"],
+            "projecao": p["projecao"],
+            "isFamilia": False,
+            "itens": None,
+        })
+
+    # "Aglutinar" — reescrito em 28/08/2026 (2ª mudança de regra do dia,
+    # pedida depois que o usuário viu produtos do grupo Piso com a MESMA
+    # descrição de 3 palavras aparecendo soltos): família agora agrupa por
+    # SEMELHANÇA DE DESCRIÇÃO PURA, sem exigir que alguém tenha algo
+    # chegando — TODO produto ativo do mesmo grupo com as mesmas 3
+    # primeiras palavras da descrição entra na mesma família, mesmo que
+    # não tenha entrada/pedido pendente e mesmo que não venda nada no
+    # período (por isso usa `ativos`/`_info_produto` direto, não
+    # `produtos_list`, que já filtra vendas<=0). Só fica individual quem
+    # não tem NENHUM outro produto parecido — nem em ruptura, nem fora.
+    produtos_por_familia = defaultdict(list)
+    for cod in ativos:
+        cadastro = produtos_cadastro.get(cod, {})
+        prefixo = _prefixo3(cadastro.get("desc", ""))
+        if prefixo:
+            produtos_por_familia[(cadastro.get("grupo", "SEM GRUPO"), prefixo)].append(cod)
+
+    anchors_por_chave = defaultdict(list)
+    produtos_sem_familia = []
+    for p in em_risco:
+        prefixo_p = _prefixo3(p["desc"])
+        chave = (p["grupo"], prefixo_p) if prefixo_p else None
+        membros_da_chave = produtos_por_familia.get(chave, []) if chave else []
+        if chave and len(membros_da_chave) > 1:
+            anchors_por_chave[chave].append(p)
+        else:
+            produtos_sem_familia.append(p)
+
+    linhas_agrupadas = []
+    for chave in anchors_por_chave:
+        grupo_chave, prefixo_chave = chave
+        # TODOS os produtos da chave (não só os que estão em ruptura) —
+        # a soma representa a família inteira, igual pedido pelo usuário.
+        membros = [_info_produto(cod) for cod in produtos_por_familia[chave]]
+
+        vendas_f = sum(m["totalVendas"] for m in membros)
+        estoque_f = sum(m["estoqueAtual"] for m in membros)
+        entrada_f = sum(m["totalEntradaPend"] for m in membros)
+        pedido_f = sum(m["totalPedidosPend"] for m in membros)
+        dias_pedido_f = max(m["diasPedidosPend"] for m in membros)
+        dias_entrada_f = max(m["diasPendEntrada"] for m in membros)
+        projecao_f, status_f = _avaliar(estoque_f, vendas_f, entrada_f, pedido_f, dias_pedido_f, dias_entrada_f)
+        marcas = sorted({m["marca"] for m in membros if m["marca"]})
+
+        # Detalhe de cada produto que compõe a família — aparece quando o
+        # usuário clica na linha pra abrir o card com a lista completa.
+        # Cada item roda a MESMA _avaliar() individualmente (não é a
+        # soma), pra mostrar a situação real de cada marca/produto.
+        itens = []
+        for m in sorted(membros, key=lambda m: -(m["totalEntradaPend"] + m["totalPedidosPend"])):
+            proj_m, status_m = _avaliar(
+                m["estoqueAtual"], m["totalVendas"], m["totalEntradaPend"],
+                m["totalPedidosPend"], m["diasPedidosPend"], m["diasPendEntrada"],
+            )
+            itens.append({
+                "cod": m["cod"], "desc": m["desc"], "marca": m["marca"], "subgrupo": m["subgrupo"],
+                "vendas": round(m["totalVendas"], 2), "estoque": round(m["estoqueAtual"], 2),
+                "entrada": round(m["totalEntradaPend"], 2), "pedidos": round(m["totalPedidosPend"], 2),
+                "diasPedidosPend": m["diasPedidosPend"], "diasPendEntrada": m["diasPendEntrada"],
+                "projecao": round(proj_m, 2), "risco": RISCO_KEYS[status_m],
+            })
+
+        primeiro = membros[0]  # departamento/subgrupo são atributo de cadastro, consistente na família
+        linhas_agrupadas.append({
+            "status": status_f, "projecao": projecao_f,
+            "linha": {
+                "cod": None, "rowId": f"fam::{grupo_chave}::{prefixo_chave}",
+                "desc": prefixo_chave, "marca": " / ".join(marcas),
+                "departamento": primeiro["departamento"], "grupo": grupo_chave, "subgrupo": primeiro["subgrupo"],
+                "vendas": round(vendas_f, 2), "estoque": round(estoque_f, 2),
+                "entrada": round(entrada_f, 2), "pedidos": round(pedido_f, 2),
+                "diasPedidosPend": dias_pedido_f, "diasPendEntrada": dias_entrada_f,
+                "projecao": round(projecao_f, 2), "risco": RISCO_KEYS[status_f],
+                "locais": sorted({loc for m in membros for loc in m["locais"]}),
+                "isFamilia": True, "itens": itens,
+            },
+        })
+    for p in produtos_sem_familia:
+        linhas_agrupadas.append({
+            "status": p["status"], "projecao": p["projecao"],
+            "linha": {
+                "cod": p["cod"], "rowId": p["cod"],
+                "desc": p["desc"], "marca": p["marca"],
+                "departamento": p["departamento"], "grupo": p["grupo"], "subgrupo": p["subgrupo"],
+                "vendas": p["totalVendas"], "estoque": p["estoqueAtual"], "entrada": p["totalEntradaPend"],
+                "risco": RISCO_KEYS[p["status"]], "locais": p["locais"], "pedidos": p["totalPedidosPend"],
+                "diasPedidosPend": p["diasPedidosPend"], "diasPendEntrada": p["diasPendEntrada"],
+                "projecao": p["projecao"], "isFamilia": False, "itens": None,
+            },
+        })
+    linhas_agrupadas.sort(key=lambda l: (SEVERITY_ORDER[l["status"]], -l["projecao"]))
+    produtos_saida_agrupado = [l["linha"] for l in linhas_agrupadas]
+
     return {
         "kpis": {
             "produtosEmRuptura": len(em_risco),
@@ -362,21 +515,8 @@ def compute_dynamic(base, dias, filial=None):
         "grupo": grupo,
         "status": status_dist,
         "locaisEstoque": locais_catalogo,
-        "produtos": [
-            {
-                "cod": p["cod"],
-                "desc": p["desc"], "marca": p["marca"],
-                "departamento": p["departamento"], "grupo": p["grupo"], "subgrupo": p["subgrupo"],
-                "vendas": p["totalVendas"], "estoque": p["estoqueAtual"],
-                "entrada": p["totalEntradaPend"], "risco": RISCO_KEYS[p["status"]],
-                "locais": p["locais"],
-                "pedidos": p["totalPedidosPend"],
-                "diasPedidosPend": p["diasPedidosPend"],
-                "diasPendEntrada": p["diasPendEntrada"],
-                "projecao": p["projecao"],
-            }
-            for p in produtos_tabela
-        ],
+        "produtos": produtos_saida,
+        "produtosAglutinados": produtos_saida_agrupado,
         "produtosTotal": len(produtos_list),
         "produtosAtivosTotal": len(ativos),
         "dias": dias,
