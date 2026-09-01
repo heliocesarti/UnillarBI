@@ -430,7 +430,15 @@ def compute_dynamic(base, dias, filial=None):
 
     anchors_por_chave = defaultdict(list)
     produtos_sem_familia = []
-    for p in em_risco:
+    # Percorre produtos_list (todo produto ativo com venda no período,
+    # qualquer risco) e não só em_risco — antes, uma família 100% "Sem
+    # risco" nunca disparava o agrupamento (nenhum membro entrava como
+    # "âncora"), e o produto sumia da Aglutinação por completo (nem
+    # agrupado, nem sozinho), mesmo tendo vendido no período e aparecendo
+    # normalmente na tabela individual. Corrigido em 01/09/2026: agora
+    # todo produto vendido aparece na Aglutinação — agrupado quando tem
+    # família com mais de 1 membro ativo, sozinho quando não tem.
+    for p in produtos_list:
         prefixo_p = _prefixo3(p["desc"])
         chave = (p["grupo"], prefixo_p) if prefixo_p else None
         membros_da_chave = produtos_por_familia.get(chave, []) if chave else []
