@@ -4,4 +4,12 @@ __pycache__/
 *.pyc
 .env
 .ruptura_cache.json
+.indisponivel_cache.json
+.excesso_cache.json
 dist/
+backend_log.txt
+frontend_log.txt
+backend/logs/
+backend_run.log
+uvicorn.log
+uvicorn_console.log

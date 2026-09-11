@@ -14,9 +14,80 @@
   --grid-line: #1E2B4E;
   --baseline: #2C3B63;
 
+  /* Tokens de apoio que mudam de valor entre tema escuro/claro (overlays,
+     ênfases e sobreposições que antes eram cor fixa espalhada pelo CSS —
+     ver bloco [data-theme="light"] mais abaixo pra saber o valor de cada
+     um no claro). Valor aqui é exatamente o que já existia no escuro,
+     então nada muda visualmente no escuro por causa disso. */
+  --overlay-1: rgba(255,255,255,0.04);
+  --overlay-2: rgba(255,255,255,0.05);
+  --overlay-3: rgba(255,255,255,0.06);
+  --emphasis-bg: rgba(0,0,0,0.2);
+  --border-faint: rgba(255,255,255,0.04);
+  --table-header-bg: rgba(0,0,0,0.15);
+  --table-header-bg-strong: rgba(0,0,0,0.28);
+  --table-stripe-bg: rgba(0,0,0,0.18);
+  --table-sticky-bg: rgba(8,12,21,0.85);
+  --topbar-bg: rgba(7,12,26,0.78);
+  --glow-blue: rgba(57,135,229,0.16);
+  --glow-red: rgba(255,0,0,0.07);
+  --accent-blue-text: #7ea8e6;
+  --accent-blue-chip-text: #cfe3fb;
+  --accent-green-text: #8fe39a;
+  --accent-green-text-hover: #a6edb0;
+  --error-text: #f3b9b9;
+
+  /* A barra lateral tem paleta própria, um pouco mais escura que o
+     conteúdo principal em cada tema, pra separar visualmente as duas
+     colunas (no escuro isso já era natural; no claro fica um cinza-azulado
+     suave, mais escuro que o fundo branco do conteúdo). Redefinidos de
+     novo dentro de [data-theme="light"] — a regra `.sidebar` mais abaixo
+     redefine localmente --text-primary/--border/etc pra esses valores,
+     então tudo dentro da sidebar (nav, rodapé) herda certo sem precisar
+     tocar em cada seletor individual. */
+  --sidebar-top: #0F1A33;
+  --sidebar-deep: #0B1530;
+  --sidebar-surface-2: #111D3A;
+  --sidebar-text: #F5F7FB;
+  --sidebar-text-secondary: #AAB8D6;
+  --sidebar-text-muted: #6E7EA3;
+  --sidebar-border: rgba(255,255,255,0.08);
+  --sidebar-border-strong: rgba(255,255,255,0.16);
+  --sidebar-overlay-1: rgba(255,255,255,0.04);
+
   --brand-red: #FF0000;
   --brand-red-soft: rgba(255,0,0,0.14);
   --brand-red-deep: #C21414;
+
+  /* Destaque do item ativo na barra lateral: branco no escuro (contrasta
+     com o fundo azul-marinho da sidebar), azul-marinho no claro (contrasta
+     com a sidebar clara) — ver override em [data-theme="light"]. */
+  --nav-active-accent: #FFFFFF;
+  --nav-active-bg-strong: rgba(255,255,255,0.14);
+  --nav-active-bg-soft: rgba(255,255,255,0.03);
+  --nav-active-border: rgba(255,255,255,0.22);
+  --nav-active-glow: rgba(255,255,255,0.5);
+
+  /* Altura compartilhada entre o retângulo da logo (.brand) e a Topbar,
+     pra ficarem coladas sem brecha nem descompasso de tamanho entre as
+     duas — antes cada uma tentava bater por padding aproximado. */
+  --header-h: 74px;
+
+  /* Subtítulo da Topbar (texto pequeno) ficou pouco legível depois do
+     tingimento por ambiente (--env-wash) — no escuro os tons ficaram bem
+     vivos/claros, então o texto precisa ser CLARO pra continuar legível
+     em cima disso (mais claro que --text-muted só aqui, sem mexer no tom
+     usado no resto do app). Sem valor no tema claro (usa o --text-muted
+     padrão de lá, que não foi mexido/pedido). */
+  --topbar-subtitle-color: #DCE3F5;
+
+  /* Tingimento da Topbar por ambiente selecionado (App.jsx aplica
+     data-ambiente no .app-shell) — gradiente de 2 pontas, dá efeito de
+     brilho/profundidade em vez de cor chapada. Sem override = sem cor
+     (transparent nas duas pontas), efeito só existe pros ambientes
+     definidos abaixo. */
+  --env-wash-a: transparent;
+  --env-wash-b: transparent;
 
   --series-1: #3987e5;
   --series-2: #1baf7a;
@@ -45,6 +116,7 @@
   --risk-alta: #fab219;
   --risk-urgencia: #d03b3b;
   --risk-emergencia: #7A1420;
+  --risk-ruptura: #FF1744;
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -52,14 +124,81 @@
   --sidebar-w: 264px;
 }
 
+/* ---------- tema claro ----------
+   Ativado via [data-theme="light"] no <html> (ver utils/theme.js). Só
+   redefine os tokens acima — nenhuma regra de layout muda, então a
+   estrutura/comportamento é idêntico nos dois temas, só a paleta muda.
+   A sidebar (--sidebar-*) fica de fora de propósito: ela é a âncora de
+   marca fixa, sempre escura, nos dois temas. */
+[data-theme="light"]{
+  color-scheme: light;
+  --page-bg: #F3F5FA;
+  --page-bg-2: #ECEFF6;
+  --surface-1: #FFFFFF;
+  --surface-2: #FFFFFF;
+  --surface-3: #F6F8FC;
+  --surface-4: #ECF0F8;
+  --border: rgba(15,23,42,0.09);
+  --border-strong: rgba(15,23,42,0.15);
+  --text-primary: #131A2C;
+  --text-secondary: #4B5773;
+  --text-muted: #8891A8;
+  --grid-line: #E3E7F1;
+  --baseline: #C8CEDD;
+
+  --overlay-1: rgba(15,23,42,0.035);
+  --overlay-2: rgba(15,23,42,0.045);
+  --overlay-3: rgba(15,23,42,0.055);
+  --emphasis-bg: rgba(15,23,42,0.06);
+  --border-faint: rgba(15,23,42,0.05);
+  --table-header-bg: rgba(15,23,42,0.035);
+  --table-header-bg-strong: rgba(15,23,42,0.07);
+  --table-stripe-bg: rgba(15,23,42,0.025);
+  --table-sticky-bg: rgba(255,255,255,0.85);
+  --topbar-bg: rgba(231,235,245,0.82);
+  --glow-blue: rgba(57,135,229,0.09);
+  --glow-red: rgba(255,0,0,0.035);
+  --accent-blue-text: #2160b8;
+  --accent-blue-chip-text: #1c5cab;
+  --accent-green-text: #0d7a3f;
+  --accent-green-text-hover: #0a5e30;
+  --error-text: #b32020;
+
+  /* Sidebar no claro: cinza-azulado suave, mais escuro que o branco do
+     conteúdo (--surface-2), pra manter a separação visual das 2 colunas
+     que já existia no escuro. Texto vira escuro (a sidebar não é mais
+     fixa-escura no claro). */
+  --sidebar-top: #E7EBF5;
+  --sidebar-deep: #DCE2F0;
+  --sidebar-surface-2: #FFFFFF;
+  --sidebar-text: #131A2C;
+  --sidebar-text-secondary: #4B5773;
+  --sidebar-text-muted: #7C86A0;
+  --sidebar-border: rgba(15,23,42,0.08);
+  --sidebar-border-strong: rgba(15,23,42,0.14);
+  --sidebar-overlay-1: rgba(15,23,42,0.045);
+
+  --nav-active-accent: #0F1A33;
+  --nav-active-bg-strong: rgba(15,26,51,0.14);
+  --nav-active-bg-soft: rgba(15,26,51,0.03);
+  --nav-active-border: rgba(15,26,51,0.22);
+  --nav-active-glow: rgba(15,26,51,0.5);
+
+  /* No claro o --text-muted padrão (mais claro) não lê bem sobre o
+     tingimento por ambiente da Topbar — precisa de algo mais escuro só
+     aqui, oposto do que precisa no escuro. */
+  --topbar-subtitle-color: #242B3A;
+}
+
 *{ box-sizing:border-box; }
 html,body,#root{ margin:0; padding:0; }
 body{
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif;
   background:
-    radial-gradient(1100px 620px at 82% -8%, rgba(57,135,229,0.16), transparent 60%),
-    radial-gradient(900px 500px at -10% 10%, rgba(255,0,0,0.07), transparent 55%),
+    radial-gradient(1100px 620px at 82% -8%, var(--glow-blue), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, var(--glow-red), transparent 55%),
     var(--page-bg);
+  transition: background-color 0.2s ease;
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -79,24 +218,101 @@ a, button{ font-family:inherit; }
   min-height:100vh;
 }
 
+/* Cor de identidade por ambiente (só na Topbar). Cada uma pensada pra ter
+   uma ligação com o próprio ambiente: azul da marca (Visão Geral), verde
+   "cédula de dinheiro" (Vendas), marrom-couro de caixa/estoque físico
+   (Estoque), dourado metálico (Financeiro) e cinza neutro/utilitário
+   (Configurações, único que não é conteúdo de negócio). Vendas/Estoque/
+   Financeiro usam gradiente de 2 tons pra dar profundidade/brilho em vez
+   de cor chapada (pedido do usuário pra ficarem "mais bonitos"). */
+/* Tema escuro (padrão): tons mais claros/vivos que o normal — sobre o
+   fundo quase preto da Topbar, uma cor "correta" mas discreta esfumaça e
+   perde a conexão com o ambiente. Aqui sim vale exagerar o brilho. */
+.app-shell[data-ambiente="visao-geral"]{
+  --env-wash-a: rgba(110,208,255,0.56);
+  --env-wash-b: rgba(35,140,235,0.56);
+}
+.app-shell[data-ambiente="vendas"]{
+  --env-wash-a: rgba(90,255,170,0.52);
+  --env-wash-b: rgba(24,201,110,0.52);
+}
+.app-shell[data-ambiente="estoque"]{
+  --env-wash-a: rgba(232,151,90,0.52);
+  --env-wash-b: rgba(181,101,46,0.52);
+}
+.app-shell[data-ambiente="financeiro"]{
+  --env-wash-a: rgba(255,224,102,0.52);
+  --env-wash-b: rgba(242,169,0,0.52);
+}
+.app-shell[data-ambiente="configuracoes"]{
+  --env-wash-a: rgba(215,222,234,0.46);
+  --env-wash-b: rgba(138,151,172,0.46);
+}
+
+/* Tema claro: a Topbar já parte de um fundo claro, então os tons originais
+   (mais contidos) continuam com boa leitura sem precisar clarear mais. */
+[data-theme="light"] .app-shell[data-ambiente="visao-geral"]{
+  --env-wash-a: rgba(90,180,255,0.48);
+  --env-wash-b: rgba(20,90,176,0.48);
+}
+[data-theme="light"] .app-shell[data-ambiente="vendas"]{
+  --env-wash-a: rgba(52,199,110,0.48);
+  --env-wash-b: rgba(11,110,58,0.48);
+}
+[data-theme="light"] .app-shell[data-ambiente="estoque"]{
+  --env-wash-a: rgba(198,134,66,0.46);
+  --env-wash-b: rgba(96,58,26,0.46);
+}
+[data-theme="light"] .app-shell[data-ambiente="financeiro"]{
+  --env-wash-a: rgba(255,213,74,0.46);
+  --env-wash-b: rgba(158,110,10,0.46);
+}
+[data-theme="light"] .app-shell[data-ambiente="configuracoes"]{
+  --env-wash-a: rgba(186,196,212,0.42);
+  --env-wash-b: rgba(100,112,132,0.42);
+}
+
 /* ---------- sidebar ---------- */
 .sidebar{
-  background: linear-gradient(180deg, var(--surface-1), #0B1530 90%);
+  /* Paleta própria (--sidebar-*, com valor diferente em cada tema — ver
+     :root/[data-theme="light"]): redefine localmente os tokens de texto/
+     borda/overlay, então tudo dentro da sidebar (nav, rodapé) herda
+     certo sem precisar repetir isso em cada seletor filho. O `color`
+     explícito aqui é essencial — sem ele, elemento sem cor própria (ex:
+     <b> sem classe) herdaria o `color` já resolvido lá no <body> (escopo
+     da página, não da sidebar), que diverge do valor daqui no tema claro. */
+  --text-primary: var(--sidebar-text);
+  --text-secondary: var(--sidebar-text-secondary);
+  --text-muted: var(--sidebar-text-muted);
+  --border: var(--sidebar-border);
+  --border-strong: var(--sidebar-border-strong);
+  --surface-2: var(--sidebar-surface-2);
+  --overlay-1: var(--sidebar-overlay-1);
+  color: var(--text-primary);
+
+  background: linear-gradient(180deg, var(--sidebar-top), var(--sidebar-deep) 90%);
   border-right:1px solid var(--border);
   display:flex; flex-direction:column;
   padding:22px 16px;
   position:sticky; top:0; height:100vh;
+  transition: background 0.2s ease;
 }
 .brand{
+  /* Faixa fixa azul-marinho escuro, igual à versão escura, independente
+     do tema ativo — âncora de marca que não segue --sidebar-* claro.
+     Margem negativa cancela o padding do .sidebar pra encostar no topo
+     (sem espaço na borda superior) e nas duas laterais da barra vertical;
+     padding vertical soma a mesma altura aproximada do .topbar. */
   display:flex; align-items:center; gap:12px;
-  padding:6px 8px 22px 8px;
-  border-bottom:1px solid var(--border);
-  margin-bottom:18px;
+  margin:-22px -16px 18px -16px;
+  padding:0 16px;
+  height: var(--header-h); box-sizing:border-box;
+  background: linear-gradient(180deg, #0F1A33, #0B1530 90%);
 }
 .brand img{ width:34px; height:auto; flex:none; filter: drop-shadow(0 0 10px rgba(255,0,0,0.35)); }
 .brand-word{ display:flex; flex-direction:column; line-height:1.15; }
-.brand-word b{ font-size:16px; font-weight:700; letter-spacing:0.2px; }
-.brand-word span{ font-size:11px; color:var(--text-muted); letter-spacing:0.6px; text-transform:uppercase; }
+.brand-word b{ font-size:16px; font-weight:700; letter-spacing:0.2px; color:#F5F7FB; }
+.brand-word span{ font-size:11px; color:#AAB8D6; letter-spacing:0.6px; text-transform:uppercase; }
 
 nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .nav-item{
@@ -109,23 +325,23 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   width:100%; text-align:left;
 }
 .nav-item svg{ width:18px; height:18px; flex:none; opacity:0.85; }
-.nav-item:hover{ background: rgba(255,255,255,0.04); color: var(--text-primary); }
+.nav-item:hover{ background: var(--overlay-1); color: var(--text-primary); }
 .nav-item.active{
-  background: linear-gradient(90deg, rgba(255,0,0,0.14), rgba(255,0,0,0.03));
+  background: linear-gradient(90deg, var(--nav-active-bg-strong), var(--nav-active-bg-soft));
   color: var(--text-primary);
-  border-color: rgba(255,0,0,0.22);
+  border-color: var(--nav-active-border);
 }
 .nav-item.active::before{
   content:""; position:absolute; left:-16px; top:8px; bottom:8px; width:3px;
-  background: var(--brand-red); border-radius:2px;
-  box-shadow: 0 0 10px rgba(255,0,0,0.7);
+  background: var(--nav-active-accent); border-radius:2px;
+  box-shadow: 0 0 10px var(--nav-active-glow);
 }
 .nav-item.disabled{ opacity:0.4; cursor:not-allowed; }
 .nav-item .soon{ margin-left:auto; font-size:9.5px; font-weight:700; color:var(--text-muted);
   border:1px solid var(--border-strong); padding:2px 6px; border-radius:20px; letter-spacing:0.4px; }
 
 .sidebar-footer{ margin-top:auto; padding-top:16px; border-top:1px solid var(--border); }
-.conn-status{ display:flex; align-items:center; gap:8px; padding:10px 10px; border-radius:10px; background:var(--surface-2); border:1px solid var(--border); }
+.conn-status{ display:flex; align-items:center; gap:8px; padding:10px 10px; border-radius:10px; background:transparent; border:1px solid var(--border); }
 .conn-dot{ width:8px; height:8px; border-radius:50%; background:var(--text-muted); flex:none; box-shadow:0 0 0 3px rgba(110,126,163,0.15); }
 .conn-dot.online{ background:var(--status-good); box-shadow:0 0 0 3px var(--status-good-bg); }
 .conn-status div{ display:flex; flex-direction:column; }
@@ -138,13 +354,15 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .topbar{
   position:sticky; top:0; z-index:20;
   display:flex; align-items:center; gap:16px;
-  padding:16px 28px;
-  background: rgba(7,12,26,0.78);
+  padding:0 28px;
+  height: var(--header-h); box-sizing:border-box;
+  background: linear-gradient(135deg, var(--env-wash-a), var(--env-wash-b)), var(--topbar-bg);
   backdrop-filter: blur(10px);
   border-bottom:1px solid var(--border);
+  transition: background 0.2s ease;
 }
 .topbar h1{ font-size:19px; margin:0; font-weight:700; letter-spacing:0.2px; }
-.topbar .subtitle{ font-size:12px; color:var(--text-muted); margin-top:2px; }
+.topbar .subtitle{ font-size:12px; color:var(--topbar-subtitle-color, var(--text-muted)); margin-top:2px; }
 .topbar-spacer{ flex:1; }
 
 .badge-mock{
@@ -162,13 +380,24 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   padding:9px 13px; border-radius:10px; font-size:12.5px; font-weight:600; cursor:pointer;
 }
 .date-filter-btn:hover{ border-color: rgba(57,135,229,0.5); }
-.date-filter-btn svg{ width:14px; height:14px; color:var(--text-muted); }
+/* Botões de ação da Topbar (Sincronizar/Limpar filtros/Filial) — azul-
+   marinho fixo (não segue tema, igual .brand), pra conectar visualmente
+   com a identidade da marca em vez do branco neutro de --surface-2. Só
+   aqui, não afeta os filtros da própria tela (.rup-filters/.indisp-filter
+   têm sua própria regra abaixo). */
+.topbar .date-filter-btn{ background:#E7EAF2; border-color: rgba(0,0,0,0.12); color:#1E2430; }
+.topbar .date-filter-btn svg, .topbar .date-filter-chevron{ color:#4B5568; }
+.date-filter-btn:disabled{ opacity:0.55; cursor:not-allowed; }
+.date-filter-btn svg{ width:14px; height:14px; color:var(--text-muted); flex-shrink:0; }
+.date-filter-chevron{ margin-left:auto; flex-shrink:0; width:14px; height:14px; color:var(--text-muted); transition: transform 0.2s; }
+.date-filter-chevron.open{ transform: rotate(180deg); }
 .date-menu{
   position:absolute; right:0; top:calc(100% + 8px);
   background:var(--surface-3); border:1px solid var(--border-strong);
   border-radius:12px; padding:6px; width:210px;
   box-shadow: 0 18px 40px rgba(0,0,0,0.45);
   display:none; flex-direction:column; gap:1px; z-index:30;
+  max-height:198px; overflow-y:auto;
 }
 .date-menu.open{ display:flex; }
 .date-menu-row{
@@ -176,17 +405,23 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   padding:9px 10px; border-radius:8px; font-size:12.5px; color:var(--text-secondary);
   cursor:pointer; background:transparent; border:none; width:100%; text-align:left; font-family:inherit;
 }
-.date-menu-row:hover{ background: rgba(255,255,255,0.05); color:var(--text-primary); }
+.date-menu-row:hover{ background: var(--overlay-2); color:var(--text-primary); }
 .date-menu-row.selected{ color:var(--text-primary); font-weight:700; }
 .date-menu-row .check{ width:14px; height:14px; opacity:0; color: var(--series-1); }
 .date-menu-row.selected .check{ opacity:1; }
 .date-menu-foot{ border-top:1px solid var(--border); margin-top:4px; padding-top:6px; font-size:11px; color:var(--text-muted); padding-left:10px; padding-bottom:4px; }
 
+/* Filtros de Departamento/Grupo/Subgrupo (Indisponível) — mesma largura
+   sempre, texto que não cabe corta com "...". */
+.indisp-filter .date-filter{ width:150px; }
+.indisp-filter .date-filter-btn{ width:100%; justify-content:space-between; }
+.indisp-filter .date-filter-btn span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
 .user-chip{ display:flex; align-items:center; gap:9px; padding-left:12px; border-left:1px solid var(--border); }
-.user-avatar{ width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--series-1),#1c3f7a); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+.user-avatar{ width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--series-1),#1c3f7a); color:#F5F7FB; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
 .user-chip .who{ display:flex; flex-direction:column; line-height:1.2; }
 .user-chip .who b{ font-size:12.5px; }
-.user-chip .who span{ font-size:10.5px; color:var(--text-muted); }
+.user-chip .who span{ font-size:10.5px; color:var(--topbar-subtitle-color, var(--text-muted)); }
 
 .content{ padding:26px 28px 60px 28px; }
 .view-anim{ animation: fadeUp 0.35s ease; }
@@ -203,12 +438,31 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 .subtab{
   font-family:inherit; font-size:12.5px; font-weight:600; color:var(--text-secondary);
-  background:transparent; border:1px solid transparent; border-radius:8px;
+  background:var(--overlay-2); border:1px solid transparent; border-radius:8px;
   padding:8px 6px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   flex:1 1 0; min-width:0; text-align:center;
 }
-.subtab:hover{ color:var(--text-primary); background:rgba(255,255,255,0.04); }
-.subtab.active{ color:var(--text-primary); background:var(--surface-4); border-color:var(--border-strong); box-shadow:0 0 0 1px rgba(255,0,0,0.12) inset; }
+.subtab:hover{ color:var(--text-primary); background:var(--overlay-1); }
+/* Mesma cor de seleção da sidebar (--nav-active-*: branco no escuro,
+   azul-marinho no claro) — antes era azul aqui, ficou inconsistente com a
+   troca feita na barra da esquerda. */
+.subtab.active{
+  color:var(--text-primary);
+  background: linear-gradient(90deg, var(--nav-active-bg-strong), var(--nav-active-bg-soft));
+  border-color: var(--nav-active-border);
+}
+
+/* variante compacta: abas não esticam pra preencher a barra (útil quando
+   a lista de abas cresce aos poucos, como nos grupos de Configurações) */
+.config-subtabs{ justify-content:flex-start; margin-bottom:16px; }
+.config-subtabs .subtab{ flex:0 0 auto; padding-left:18px; padding-right:18px; }
+/* Dentro de Configurações, essa barra é a 3ª seleção (depois de ambiente
+   e módulo) — só a 1ª (.config-nav-header.active) fica azul; esta usa a
+   mesma marcação neutra do módulo (cinza claro + borda cinza escuro). */
+.config-subtabs .subtab.active{
+  background: var(--overlay-3);
+  border-color: var(--border-strong); border-width:1.5px;
+}
 
 .ruptura-grid { 
   display: grid; 
@@ -230,7 +484,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   display:flex; align-items:center; gap:9px; padding:8px 6px; border-radius:8px; cursor:pointer;
   font-size:12.5px; color:var(--text-secondary); user-select:none;
 }
-.filter-check:hover{ background:rgba(255,255,255,0.05); color:var(--text-primary); }
+.filter-check:hover{ background:var(--overlay-2); color:var(--text-primary); }
 .filter-check input[type=checkbox]{
   appearance:none; -webkit-appearance:none; width:16px; height:16px; border-radius:5px;
   border:1.5px solid var(--border-strong); background:var(--surface-1); flex:none;
@@ -249,7 +503,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .table-scroll{ max-height:420px; overflow-y:auto; }
 .table-scroll thead th{ 
   position:sticky; top:0; 
-  background: rgba(8, 12, 21, 0.85); z-index:1; 
+  background: var(--table-sticky-bg); z-index:1;
   box-shadow: 0 1px 0 var(--border-strong);
   backdrop-filter: blur(8px);
 }
@@ -287,6 +541,9 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .kpi-label{ font-size:12px; color:var(--text-secondary); font-weight:600; }
 .kpi-value-row{ display:flex; align-items:baseline; gap:9px; margin-top:8px; }
 .kpi-value{ font-size:27px; font-weight:700; letter-spacing:-0.2px; font-variant-numeric: proportional-nums; }
+/* Refinamento SaaS premium, só no tema claro (escuro fica como sempre foi). */
+[data-theme="light"] .kpi-label{ font-size:11px; font-weight:500; color:#64748B; }
+[data-theme="light"] .kpi-value{ font-weight:800; color:var(--text-primary); }
 .kpi-delta{ display:inline-flex; align-items:center; gap:3px; font-size:11.5px; font-weight:700; padding:3px 7px; border-radius:20px; }
 .kpi-delta.good{ color:var(--status-good); background:var(--status-good-bg); }
 .kpi-delta.bad{ color:var(--status-critical); background:var(--status-critical-bg); }
@@ -295,12 +552,23 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .kpi-sub{ font-size:10.5px; color:var(--text-muted); }
 .kpi-spark{ display:block; }
 
+.indisp-kpi-row{ display:flex; gap:18px; margin-top:10px; }
+.indisp-kpi-metric{ display:flex; flex-direction:column; gap:3px; }
+.indisp-kpi-metric-label{
+  font-size:9.5px; font-weight:700; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:0.4px;
+}
+.indisp-kpi-metric-value{
+  font-size:18px; font-weight:700; letter-spacing:-0.2px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Filtros Minimalistas (Alto Nível / Clean) */
 .rup-filters {
   display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; margin-top: 12px;
 }
 .rup-filters-row {
-  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
 
 .rup-minimal-field {
@@ -315,7 +583,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   border-radius: 6px; padding: 0 8px; height: 30px;
   transition: all 0.2s;
 }
-.rup-minimal-input:focus-within { border-color: rgba(57,135,229,0.5); background: rgba(0,0,0,0.2); }
+.rup-minimal-input:focus-within { border-color: rgba(57,135,229,0.5); background: var(--emphasis-bg); }
 .rup-minimal-input input {
   background: transparent; border: none; color: var(--text-primary);
   width: 24px; text-align: center; font-size: 12.5px; font-weight: 500;
@@ -324,13 +592,20 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .rup-minimal-input input::-webkit-outer-spin-button, .rup-minimal-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .rup-minimal-input i { font-style: normal; font-size: 10.5px; color: var(--text-muted); }
 
-.rup-filters .date-filter-btn {
+/* Todas as caixas da linha de filtros da Ruptura (dias, risco,
+   departamento, grupo, subgrupo) com a mesma largura fixa — texto que não
+   cabe corta com "...", e a setinha de cada uma sempre alinhada na mesma
+   posição, pra ficar óbvio que são todas seletores. */
+.rup-filters .date-filter-btn, .rup-filters .rup-minimal-input {
   background: transparent; border: 1px solid var(--border);
-  border-radius: 6px; padding: 0 10px; height: 30px;
-  font-size: 11.5px; font-weight: 500; color: var(--text-primary);
+  border-radius: 6px; padding: 0 8px; height: 28px; width: 148px;
+  font-size: 11px; font-weight: 500; color: var(--text-primary);
   display: flex; align-items: center; transition: all 0.2s;
 }
-.rup-filters .date-filter-btn:hover { border-color: rgba(57,135,229,0.4); background: rgba(0,0,0,0.2); }
+.rup-filters .date-filter-btn:hover, .rup-filters .rup-minimal-input:hover { border-color: rgba(57,135,229,0.4); background: var(--emphasis-bg); }
+.rup-filters .date-filter-btn span, .rup-filters .rup-minimal-input span {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 /* Dropdown nativo para filtros (Sanfona) */
 .rup-minimal-dropdown { position: relative; }
@@ -348,11 +623,12 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   border-radius: 4px; font-size: 11.5px; font-weight: 500; color: var(--text-secondary);
   cursor: pointer; transition: background 0.15s;
 }
-.rup-dropdown-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.rup-dropdown-item:hover { background: var(--overlay-2); color: var(--text-primary); }
 .rup-dropdown-item input[type="checkbox"] { 
   margin: 0; cursor: pointer; accent-color: var(--series-1); width: 13px; height: 13px;
 }
 .rup-dropdown-item .fdot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.rup-dropdown-menu.scrollable { max-height: 280px; overflow-y: auto; }
 
 .info-tip{ position:relative; display:inline-flex; align-items:center; color:var(--text-muted); cursor:help; flex:none; margin-left:auto; }
 .info-tip:hover{ color:var(--text-primary); }
@@ -388,22 +664,237 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .icon-btn:disabled{ opacity:0.5; cursor:not-allowed; }
 .icon-btn.primary{ background:var(--brand-red); border-color:var(--brand-red); color:#fff; }
 .icon-btn.primary:hover{ color:#fff; border-color:var(--brand-red-deep); background:var(--brand-red-deep); }
+.icon-btn.aglutinar-on{ background:rgba(12,163,12,0.16); border-color:rgba(12,163,12,0.5); color:var(--accent-green-text); }
+.icon-btn.aglutinar-on:hover{ color:var(--accent-green-text-hover); border-color:rgba(12,163,12,0.65); }
 
-.config-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:18px; }
-.config-field{ display:flex; flex-direction:column; gap:7px; }
-.config-label{
-  font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;
-}
 .config-input{
   background:var(--surface-3); border:1px solid var(--border-strong); color:var(--text-primary);
   font-size:12.5px; font-family:inherit; padding:8px 10px; border-radius:8px; height:36px;
 }
 .config-input:focus{ outline:none; border-color:rgba(57,135,229,0.6); }
-.config-daterange{ display:flex; align-items:center; gap:8px; margin-top:6px; }
-.config-daterange span{ font-size:11px; color:var(--text-muted); }
-.config-daterange .config-input{ flex:1; min-width:0; }
-.config-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.config-feedback{ font-size:11.5px; color:var(--text-secondary); }
+
+/* ---------- configurações: shell multi-ambiente ---------- */
+.config-shell{ display:grid; grid-template-columns:264px 1fr; gap:20px; align-items:stretch; }
+
+.config-nav{
+  background: var(--surface-2); border:1px solid var(--border); border-radius: var(--radius-lg);
+  padding:8px; display:flex; flex-direction:column; gap:2px;
+  position:sticky; top:0;
+}
+.config-nav-group{ display:flex; flex-direction:column; }
+.config-nav-group + .config-nav-group{ margin-top:2px; }
+.config-nav-header{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
+  background:var(--overlay-2); border:1px solid transparent; color:var(--text-secondary);
+  font-size:13px; font-weight:700; padding:11px 12px; border-radius:9px; cursor:pointer;
+}
+.config-nav-header:hover{ background:var(--overlay-1); color:var(--text-primary); }
+/* Vermelho é só da barra vertical da esquerda (Sidebar principal) — aqui
+   dentro já é "ambiente da direita", então a seleção é sempre azul. */
+.config-nav-header.active{
+  color:var(--text-primary);
+  background: linear-gradient(90deg, rgba(57,135,229,0.22), rgba(57,135,229,0.06));
+  border-color: rgba(57,135,229,0.4);
+}
+.config-nav-chevron{ display:flex; color:var(--text-muted); transition:transform 0.18s ease; }
+.config-nav-chevron svg{ width:14px; height:14px; }
+.config-nav-group.open .config-nav-chevron{ transform:rotate(90deg); color:var(--text-secondary); }
+
+.config-nav-list{
+  display:flex; flex-direction:column; gap:6px; padding:6px 4px 8px 6px;
+  border-left:1px solid var(--border); margin:0 8px 4px 8px;
+}
+.config-nav-item{
+  display:flex; align-items:center; gap:9px; width:100%; text-align:left;
+  background:var(--overlay-1); border:1px solid transparent; color:var(--text-secondary);
+  font-size:12px; font-weight:600; padding:7px 8px; border-radius:7px; cursor:pointer;
+}
+.config-nav-item:hover{ background:var(--overlay-1); color:var(--text-primary); }
+/* Só a 1ª seleção do ambiente direito (.config-nav-header.active acima)
+   fica azul — o módulo dentro dele é a 2ª seleção, marcação neutra
+   (cinza claro + borda cinza escuro), pra não competir com a 1ª. */
+.config-nav-item.active{
+  background: var(--overlay-3);
+  color: var(--text-primary); border-color: var(--border-strong); border-width:1.5px;
+}
+.config-nav-item-label{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.config-status-badge{
+  height:18px; padding:0 7px; border-radius:6px; flex:none; white-space:nowrap;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:9.5px; font-weight:700; letter-spacing:0.4px; text-transform:uppercase;
+  background: var(--overlay-3); color: var(--text-muted);
+}
+
+.config-content{ min-width:0; display:flex; flex-direction:column; gap:18px; }
+.config-breadcrumb{
+  display:flex; align-items:center; gap:8px; padding:0 2px;
+  font-size:11px; font-weight:700; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:0.5px;
+}
+.config-breadcrumb-sep{ opacity:0.5; }
+
+/* ---------- configurações: painel de parâmetros ---------- */
+.settings-section{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg);
+}
+.settings-rows{ display:flex; flex-direction:column; }
+.settings-row{
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  padding:10px 16px; border-top:1px solid var(--border);
+}
+.settings-rows .settings-row:first-child{ border-top:none; }
+.settings-row--stack{ flex-direction:column; align-items:flex-start; gap:10px; }
+.settings-row--stack .settings-row-control{ width:100%; }
+.settings-row-text{ min-width:0; }
+.settings-row-label{ font-size:12.5px; font-weight:600; color:var(--text-primary); margin-bottom:1px; }
+.settings-row-help{ font-size:11px; color:var(--text-muted); line-height:1.35; max-width:420px; }
+.settings-row-control{ flex:none; }
+.settings-row-control .config-input{ min-width:200px; }
+
+/* Lista de exceções (Aglutinar > Departamento/Grupo/Subgrupo) — bloco
+   dentro do mesmo card, abaixo das linhas normais de parâmetro. Cada
+   exceção é uma linha `.settings-row` normal (mesma "pegada" das linhas
+   de parâmetro acima), só que com vários controles do lado direito. */
+.settings-subsection{ padding:14px 16px 16px 16px; border-top:1px solid var(--border); }
+.settings-subsection-help{ font-size:11px; color:var(--text-muted); line-height:1.4; margin:0 0 4px 0; max-width:560px; }
+.settings-exception-hint{ font-size:11px; color:var(--text-muted); flex:none; }
+
+/* Busca (filtra por texto) e paginação (5 por página) da lista de
+   exceções — só aparecem quando há mais exceções que cabem numa página,
+   pra não poluir a lista curta. Cada exceção continua sempre expandida,
+   igual sempre foi (nada mudou na própria linha). */
+.rup-excecao-busca{ width:100%; box-sizing:border-box; margin:0 0 10px 0; }
+.rup-excecao-paginacao{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:10px 2px 0 2px; margin-top:2px;
+}
+.rup-excecao-paginacao-info{ font-size:11px; color:var(--text-muted); }
+.rup-excecao-paginacao-botoes{ display:flex; align-items:center; gap:10px; }
+.rup-excecao-paginacao-num{ font-size:11px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+.rup-excecao-paginacao-botoes .icon-btn:disabled{ opacity:0.4; cursor:default; }
+
+/* campo de seleção (single ou multi): a linha nunca muda de tamanho —
+   clicar na caixinha de valor atual abre um menu FLUTUANTE por cima do
+   conteúdo (não empurra as outras linhas pra baixo). Caixinha com
+   largura fixa pra todas ficarem do mesmo tamanho, mesmo com textos
+   diferentes (trunca com "…" quando não cabe). */
+.settings-float-anchor{ position:relative; flex:none; }
+.settings-row-current{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  width:200px; font-size:11px; font-weight:500; color:var(--text-secondary);
+  background:var(--overlay-2); border:1px solid var(--border-strong); border-radius:8px;
+  padding:8px 10px; cursor:pointer; font-family:inherit;
+}
+.settings-row-current:hover{ border-color:rgba(57,135,229,0.4); color:var(--text-primary); }
+.settings-row-current span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.settings-row-current svg{ width:12px; height:12px; color:var(--text-muted); flex:none; transition:transform 0.18s ease; }
+.settings-row-current.open{ border-color:rgba(57,135,229,0.5); }
+.settings-row-current.open svg{ transform:rotate(180deg); }
+
+.settings-float-menu{
+  position:absolute; right:0; top:calc(100% + 6px); z-index:20;
+  background:var(--surface-3); border:1px solid var(--border-strong); border-radius:12px;
+  padding:6px; width:240px; max-height:260px; overflow-y:auto;
+  box-shadow:0 18px 40px rgba(0,0,0,0.45);
+  display:flex; flex-direction:column; gap:1px;
+  animation: fadeUp 0.15s ease;
+}
+.settings-float-item{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+  padding:9px 10px; border-radius:8px; font-size:11px; color:var(--text-secondary);
+  background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;
+}
+.settings-float-item:hover{ background:var(--overlay-3); color:var(--text-primary); }
+.settings-float-item.selected{ color:var(--text-primary); font-weight:700; }
+.settings-float-item .check{ width:13px; height:13px; opacity:0; color:var(--series-1); flex:none; }
+.settings-float-item.selected .check{ opacity:1; }
+
+/* Campo de busca do seletor de Departamento/Grupo/Subgrupo (exceções do
+   Aglutinar, InlineMultiSelect) — regras novas, não alteram nada de
+   .settings-float-menu/.settings-float-item usados pelos outros
+   seletores de Configurações (Situação, Colunas de exportação etc.). */
+.settings-float-menu.inline-ms-menu{ overflow:visible; max-height:none; }
+.settings-float-search{
+  width:100%; box-sizing:border-box; font-size:11px; font-family:inherit;
+  color:var(--text-primary); background:var(--overlay-2);
+  border:1px solid var(--border-strong); border-radius:7px;
+  padding:7px 9px; margin-bottom:4px; outline:none;
+}
+.settings-float-search:focus{ border-color:rgba(57,135,229,0.5); }
+.inline-ms-list{ display:flex; flex-direction:column; gap:1px; max-height:220px; overflow-y:auto; }
+
+.segmented-toggle{
+  display:inline-flex; background:var(--surface-3); border:1px solid var(--border-strong);
+  border-radius:999px; padding:2px; gap:2px;
+}
+.segmented-toggle-opt{
+  border:1px solid transparent; background:transparent; color:var(--text-secondary);
+  font-size:11px; font-weight:700; padding:5px 14px; border-radius:999px; cursor:pointer;
+}
+.segmented-toggle-opt:hover{ color:var(--text-primary); }
+.segmented-toggle-opt.active{ background:rgba(57,135,229,0.18); border-color:rgba(57,135,229,0.5); color:var(--accent-blue-chip-text); }
+
+.settings-footer{ display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+.settings-banner{
+  font-size:12px; padding:10px 14px; border-radius:10px; flex:1 1 260px;
+  background:rgba(57,135,229,0.1); border:1px solid rgba(57,135,229,0.25); color:var(--text-secondary);
+}
+.settings-banner.is-error{ background:rgba(208,59,59,0.12); border-color:rgba(208,59,59,0.35); color:var(--error-text); }
+
+/* Configurações → Documentação: texto corrido, paginado, não formulário. */
+.doc-panel{ display:flex; flex-direction:column; }
+.doc-page{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:24px 26px; display:flex; flex-direction:column; gap:22px;
+}
+.doc-bloco{ display:flex; flex-direction:column; gap:9px; }
+.doc-bloco-titulo{
+  font-size:13.5px; font-weight:700; color:var(--text-primary);
+  padding-left:11px; border-left:3px solid var(--series-1);
+}
+.doc-bloco-corpo{ display:flex; flex-direction:column; gap:9px; padding-left:14px; }
+.doc-bloco-corpo p{ font-size:12.5px; line-height:1.65; color:var(--text-secondary); margin:0; }
+.doc-bloco-corpo b{ color:var(--text-primary); font-weight:600; }
+.doc-bloco-corpo i{ color:var(--text-primary); font-style:normal; }
+.doc-placeholder{ padding:32px 20px; }
+
+/* Passador de página (setas + pontos) — usado no submenu de Estoque, onde
+   8 rótulos não cabem bem numa fileira de abas. */
+.doc-paginador{
+  display:flex; align-items:center; justify-content:center; gap:18px;
+  padding:4px 0 6px;
+}
+.doc-pag-seta{
+  width:32px; height:32px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--surface-3); border:1px solid var(--border-strong); color:var(--text-primary);
+  cursor:pointer; transition:border-color 0.15s, opacity 0.15s;
+}
+.doc-pag-seta svg{ width:15px; height:15px; }
+.doc-pag-seta:hover:not(:disabled){ border-color:rgba(57,135,229,0.5); }
+.doc-pag-seta:disabled{ opacity:0.3; cursor:default; }
+.doc-pag-info{ display:flex; flex-direction:column; align-items:center; gap:7px; min-width:220px; }
+.doc-pag-titulo{ font-size:15.5px; font-weight:700; color:var(--text-primary); text-align:center; }
+.doc-pag-dots{ display:flex; align-items:center; gap:6px; }
+.doc-pag-dot{
+  width:6px; height:6px; padding:0; border-radius:3px; border:none;
+  background:var(--border-strong); cursor:pointer; transition:all 0.15s;
+}
+.doc-pag-dot:hover{ background:var(--text-muted); }
+.doc-pag-dot.active{ width:16px; background:var(--series-1); }
+.doc-pag-contador{ font-size:10.5px; color:var(--text-muted); }
+
+.doc-table-wrap{ overflow-x:auto; }
+.doc-table{ width:100%; border-collapse:collapse; font-size:12px; }
+.doc-table th{
+  text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.3px;
+  color:var(--text-muted); padding:6px 10px; border-bottom:1px solid var(--border-strong);
+}
+.doc-table td{ padding:10px; border-bottom:1px solid var(--border); color:var(--text-secondary); vertical-align:top; }
+.doc-table tr:last-child td{ border-bottom:none; }
+.doc-table td:first-child{ white-space:nowrap; width:1%; }
+.doc-risk-nome{ display:inline-flex; align-items:center; gap:7px; font-weight:700; color:var(--text-primary); }
+.doc-risk-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
 
 .chart-wrap{ position:relative; }
 .chart-wrap svg{ width:100%; height:auto; display:block; overflow:visible; }
@@ -416,17 +907,17 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 
 .data-table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
 .data-table th, .data-table td{
-  text-align:left; padding:10px 16px; 
-  border-bottom:1px solid rgba(255, 255, 255, 0.04); 
+  text-align:left; padding:10px 16px;
+  border-bottom:1px solid var(--border-faint);
   white-space:nowrap; vertical-align:middle;
 }
-.data-table th{ 
-  color:var(--text-muted); font-weight:600; font-size:10.5px; 
-  text-transform:uppercase; letter-spacing:0.4px; 
-  background: rgba(0,0,0,0.15); border-bottom:1px solid var(--border-strong);
+.data-table th{
+  color:var(--text-muted); font-weight:600; font-size:10.5px;
+  text-transform:uppercase; letter-spacing:0.4px;
+  background: var(--table-header-bg); border-bottom:1px solid var(--border-strong);
 }
 .data-table td{ color:var(--text-muted); font-variant-numeric: tabular-nums; font-weight:400; }
-.data-table td.emph{ color:#7ea8e6; font-weight:500; } /* Azul sutil/fraco */
+.data-table td.emph{ color:var(--accent-blue-text); font-weight:500; } /* Azul sutil/fraco */
 .data-table td.desc{ 
   color:var(--text-muted); font-weight:400; 
   max-width:260px; overflow:hidden; text-overflow:ellipsis; 
@@ -438,10 +929,90 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .data-table th.num, .data-table td.num{ text-align:right; }
 .data-table td.num{ color:var(--text-muted); font-weight:400; } /* Igual ao subtítulo */
 .data-table tbody tr{ transition: background 0.15s ease; cursor:pointer; }
-.data-table tbody tr:nth-child(even) td{ background:rgba(0,0,0,0.18); }
-.data-table tbody tr:hover td{ background:rgba(255,255,255,0.04); }
+.data-table tbody tr:nth-child(even) td{ background:var(--table-stripe-bg); }
+.data-table tbody tr:hover td{ background:var(--overlay-1); }
 .data-table tbody tr.selected td{ background:rgba(57,135,229,0.1); }
 .data-table tbody tr.selected:hover td{ background:rgba(57,135,229,0.16); }
+
+/* Tabela da Ruptura (e modal de família do Aglutinar): mais compacta que o
+   padrão de .data-table — colunas raramente precisam de tanto respiro, os
+   números não costumam ultrapassar o espaço. Só ajuste visual (padding/
+   fonte), reaproveita todo o resto do estilo/cores/hover de .data-table. */
+.data-table.rup-table-compact{ font-size:11px; }
+.data-table.rup-table-compact th,
+.data-table.rup-table-compact td{ padding:6px 10px; }
+
+/* Cabeçalho das 2 tabelas da Ruptura (tabela principal e o modal de
+   família do Aglutinar, únicas que usam .rup-table-compact): barra
+   cinza um pouco mais marcada que o resto do app + títulos de mais de
+   1 palavra em 2 linhas (quebra manual via <br/> no JSX) pra encurtar a
+   coluna sem cortar nem embolar o número da linha de baixo.
+   Centralização vertical NÃO usa vertical-align (a matemática de
+   line-box do vertical-align:middle depende de métrica de fonte por
+   caractere, e mostrou inconsistência real entre títulos de 1 palavra
+   iguais — "Código" x "Ruptura"/"Descrição" deveriam ficar idênticos e
+   não ficaram). Em vez disso, o próprio texto do cabeçalho é embrulhado
+   em .th-stack (span), um flex container que centraliza de forma
+   determinística dentro de 100% da altura da célula — título de 1
+   palavra fica no centro exato da barra; título de 2 linhas (1 bloco só,
+   por causa do <br/>) também centraliza como bloco, então sobe um pouco
+   acima do centro e desce um pouco abaixo, mas sempre com a MESMA altura
+   de referência que os títulos de 1 palavra usam — os 2 grupos ficam
+   garantidamente consistentes entre si. */
+.data-table.rup-table-compact thead th{
+  background: var(--table-header-bg-strong);
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.data-table.rup-table-compact thead th .th-stack{
+  display: flex;
+  align-items: center;
+  height: 100%;
+  line-height: 1.35;
+  white-space: normal;
+}
+/* Colunas numéricas: título de 2 linhas alinhado à esquerda (a 1ª letra
+   da palavra de baixo cai bem embaixo da 1ª letra da palavra de cima,
+   sem centralizar cada linha separada), e o valor logo abaixo
+   centralizado em relação a esse título — só aqui, não é o padrão
+   (alinhado à direita) do resto do app. */
+.data-table.rup-table-compact th.num{ text-align:left; }
+.data-table.rup-table-compact td.num{ text-align:center; }
+
+/* Aproxima o bloco Marca + colunas numéricas (Total vendas 60d em
+   diante): reduz só o padding horizontal dessas colunas (mantém o
+   vertical, herdado do padding:6px 10px de .rup-table-compact th/td) —
+   Marca fica mais perto de Descrição (com um respiro pequeno, não
+   colado) e as numéricas ficam mais compactas entre si e mais perto de
+   Marca. Nenhuma coluna foi removida/reordenada, só o espaçamento. */
+.data-table.rup-table-compact th.col-marca,
+.data-table.rup-table-compact td.col-marca,
+.data-table.rup-table-compact th.num,
+.data-table.rup-table-compact td.num{
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* Linha de família do Aglutinar: mesmas colunas da tabela normal, só com
+   um fundo verde bem sutil pra diferenciar de um produto real. */
+.rup-aglutinar-familia-row td{ background:rgba(74,222,128,0.06); border-bottom:1px solid rgba(74,222,128,0.14); }
+.rup-aglutinar-familia-row:hover td{ background:rgba(74,222,128,0.1); }
+.rup-aglutinar-familia-row{ cursor:pointer; }
+.rup-aglutinar-icon{ display:flex; align-items:center; color:var(--accent-green-text); }
+.rup-aglutinar-icon svg{ width:13px; height:13px; }
+
+.rup-modal-backdrop{
+  position:fixed; inset:0; z-index:400;
+  background:rgba(4,7,16,0.6); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.rup-modal{
+  width:100%; max-width:1080px; max-height:80vh;
+  display:flex; flex-direction:column; overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,0.5);
+}
+.rup-modal .table-scroll{ overflow:auto; }
+
 .table-title{ font-weight:600; letter-spacing:0.2px; }
 
 /* ---------- tooltip ---------- */
@@ -482,7 +1053,12 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   :root{ --sidebar-w: 76px; }
   .brand-word, .nav-item span.label, .nav-item .soon, .conn-status span, .conn-status b{ display:none; }
   .sidebar{ align-items:center; padding:20px 10px; }
-  .brand{ justify-content:center; padding:0 0 18px 0; }
+  .brand{ justify-content:center; margin:-20px -10px 18px -10px; padding:0 10px; }
   .nav-item{ justify-content:center; padding:12px; }
   .conn-status{ justify-content:center; }
+
+  .config-shell{ grid-template-columns:1fr; }
+  .config-nav{ position:static; }
+  .settings-row{ flex-direction:column; align-items:flex-start; gap:10px; }
+  .settings-row-control .config-input{ min-width:0; width:100%; }
 }

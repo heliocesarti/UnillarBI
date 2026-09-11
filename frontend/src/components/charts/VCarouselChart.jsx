@@ -3,7 +3,7 @@ import { theme } from '../../theme';
 import { roundedBarPath } from '../../utils/svgPaths';
 import { useTooltip } from '../../utils/TooltipContext';
 
-export default function VCarouselChart({ title, subtitle, data, valueFormatter, selectedLabel, onBarClick }) {
+export default function VCarouselChart({ title, subtitle, data, valueFormatter, selectedLabel, onBarClick, truncateAt = 8, height = 220, compress = false }) {
   const { showTooltip, hideTooltip } = useTooltip();
   const [hoverI, setHoverI] = useState(null);
   const [page, setPage] = useState(0);
@@ -14,7 +14,7 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
   const safePage = Math.min(page, maxPage);
   const visibleData = safeData.slice(safePage * ITEMS_PER_PAGE, (safePage + 1) * ITEMS_PER_PAGE);
 
-  const W = 400, H = 220, padL = 20, padR = 20, padT = 28, padB = 40;
+  const W = 400, H = height, padL = 20, padR = 20, padT = 28, padB = 40;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const n = ITEMS_PER_PAGE;
   const slot = plotW / n;
@@ -25,7 +25,16 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
   // some visualmente ao trocar de página.
   const globalMax = Math.max(...safeData.map(d => d.value), 1);
   const maxV = globalMax * 1.18;
-  const y = (v) => padT + plotH - (plotH * v / maxV);
+  // `compress` usa raiz quadrada em vez de escala linear — só pra ALTURA
+  // visual da barra. Continua ordenado e crescente com o valor (nunca
+  // inverte nem empata o que era diferente), mas um valor bem menor que o
+  // maior do conjunto (ex.: 1% dele) deixa de ficar visualmente ~1% da
+  // altura e passa a ~10%, o suficiente pra não sumir/ficar difícil de
+  // mirar quando um item domina demais os outros. O valor exato mostrado
+  // no rótulo em cima da barra nunca muda — só a altura é comprimida.
+  const scale = compress ? Math.sqrt : (v) => v;
+  const scaledMaxV = scale(maxV);
+  const y = (v) => padT + plotH - (plotH * scale(Math.max(v, 0)) / scaledMaxV);
   const baseY = y(0);
 
   return (
@@ -49,23 +58,37 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
         </div>
       </div>
       <div className="chart-wrap" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto" style={{ maxHeight: 220 }}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto" style={{ maxHeight: H }}>
           {[0, 1, 2, 3].map(t => (
             <line key={t} x1={padL} x2={W - padR} y1={padT + plotH * t / 3} y2={padT + plotH * t / 3} stroke={theme.gridLine} strokeWidth="1" />
           ))}
           {visibleData.map((d, i) => {
             const cx = padL + slot * i + slot / 2;
-            const bh = Math.max(2, plotH - (y(d.value) - padT));
-            const shortLabel = d.label.length > 9 ? d.label.slice(0, 8) + '…' : d.label;
+            // Piso mínimo de altura visível pra barra pequena não sumir
+            // (ficava em 2px, quase invisível e difícil de mirar) — o
+            // alvo de clique (o <rect> abaixo) já cobre a coluna inteira,
+            // isso aqui é só pra dar afordância visual mesmo com valor
+            // muito menor que o resto do gráfico. A base da barra fica
+            // SEMPRE em `baseY` — o piso mínimo só sobe o topo, nunca deixa
+            // a barra crescer pra baixo da linha (bug corrigido: antes o
+            // topo ficava fixo em y(d.value) e só a altura crescia, o que
+            // empurrava o fundo da barra pra baixo da linha de base).
+            const bh = Math.max(6, baseY - y(d.value));
+            const barTop = baseY - bh;
+            const shortLabel = d.label.length > truncateAt + 1 ? d.label.slice(0, truncateAt) + '…' : d.label;
 
-            const isSelected = selectedLabel === d.label;
-            const dimmed = selectedLabel != null && !isSelected;
+            // `selectedLabel` aceita tanto uma string única (uso antigo,
+            // seleção exclusiva) quanto um Set (múltipla escolha) — quem
+            // chama decide qual dos dois passar, sem mudar assinatura.
+            const isSelected = selectedLabel instanceof Set ? selectedLabel.has(d.label) : selectedLabel === d.label;
+            const hasSelection = selectedLabel instanceof Set ? selectedLabel.size > 0 : selectedLabel != null;
+            const dimmed = hasSelection && !isSelected;
 
             return (
               <g key={i}>
-                <path d={roundedBarPath(cx - barW / 2, y(d.value), barW, bh, 4)} fill={d.color || theme.series1} opacity={dimmed ? 0 : (hoverI === i ? 0.82 : 1)} />
+                <path d={roundedBarPath(cx - barW / 2, barTop, barW, bh, 4)} fill={d.color || theme.series1} opacity={dimmed ? 0 : (hoverI === i ? 0.82 : 1)} />
                 {!dimmed && (
-                  <text x={cx} y={y(d.value) - 8} textAnchor="middle" fontSize="11" fontWeight={isSelected ? "700" : "600"} fill={theme.textPrimary}>{valueFormatter ? valueFormatter(d.value) : d.value}</text>
+                  <text x={cx} y={barTop - 8} textAnchor="middle" fontSize="11" fontWeight={isSelected ? "700" : "600"} fill={theme.textPrimary}>{valueFormatter ? valueFormatter(d.value) : d.value}</text>
                 )}
                 <text x={cx} y={H - 14} textAnchor="middle" fontSize="10.5" fontWeight={isSelected ? "700" : "400"} fill={isSelected ? theme.textPrimary : theme.textMuted}>{shortLabel}</text>
                 <rect

@@ -11,3 +11,7 @@ export function fmtFull(n) {
 export function fmtNum(n) {
   return (n ?? 0).toLocaleString('pt-BR');
 }
+
+export function fmtInt(n) {
+  return Math.round(n ?? 0).toLocaleString('pt-BR');
+}

@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import VCarouselChart from '../../components/charts/VCarouselChart';
 import DonutChart from '../../components/charts/DonutChart';
-import CheckDropdown from '../../components/CheckDropdown';
+import FilterDropdown from '../../components/FilterDropdown';
 import { api } from '../../api/client';
 import { theme, withSeriesColors } from '../../theme';
 import { fmtNum } from '../../utils/format';
 import { useCountUp } from '../../utils/useCountUp';
+import { RANGES } from '../../constants/filtros';
+
+const CalendarIcon = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>;
 
 const DIAS_MAP = { '7': 7, '30': 30, '60': 60, '90': 90, '12m': 365 };
 
@@ -13,11 +16,15 @@ function round2(v) {
   return Math.round(v * 100) / 100;
 }
 
-// Ordem fixa pedida: sempre as 5 opções, mesmo sem produto naquele status.
+// Ordem fixa pedida: sempre as 6 opções, mesmo sem produto naquele status.
 const RISCO_ORDEM = [
   {
+    key: 'ruptura', label: 'Ruptura', color: theme.riskRuptura,
+    info: 'Estoque ZERADO agora! Mesmo com pedido ou entrada a caminho, o produto já está sem nenhuma unidade disponível — nível mais crítico, pede atenção imediata. (Válido apenas para produtos ativos para sugestão de compra).',
+  },
+  {
     key: 'emergencia', label: 'Emergência', color: theme.riskEmergencia,
-    info: 'Produto sem estoque ou vai faltar muito em breve! Nenhum pedido de reposição foi feito até agora e não há mercadoria a caminho. (Válido apenas para produtos ativos para o sugestão de compra).',
+    info: 'Vai faltar muito em breve! Estoque baixo, nenhum pedido de reposição foi feito até agora e não há mercadoria a caminho. (Válido apenas para produtos ativos para o sugestão de compra).',
   },
   {
     key: 'urgencia', label: 'Urgência', color: theme.riskUrgencia,
@@ -50,8 +57,6 @@ function sortValue(p, key) {
   return (p[key] ?? '').toString().toLowerCase();
 }
 
-const LocalIcon = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>;
-
 function InfoTip({ text }) {
   return (
     <span className="info-tip" onClick={(e) => e.preventDefault()}>
@@ -61,12 +66,14 @@ function InfoTip({ text }) {
   );
 }
 
-function Th({ col, num, sort, onSort, children }) {
+function Th({ col, num, className, sort, onSort, children }) {
   const active = sort.key === col;
   return (
-    <th className={'sortable' + (num ? ' num' : '') + (active ? ' sorted' : '')} onClick={() => onSort(col)}>
-      {children}
-      <span className="sort-arrow">{active ? (sort.dir === 'asc' ? '▲' : '▼') : ''}</span>
+    <th className={'sortable' + (num ? ' num' : '') + (active ? ' sorted' : '') + (className ? ' ' + className : '')} onClick={() => onSort(col)}>
+      <span className="th-stack">
+        {children}
+        <span className="sort-arrow">{active ? (sort.dir === 'asc' ? '▲' : '▼') : ''}</span>
+      </span>
     </th>
   );
 }
@@ -88,38 +95,117 @@ function RupStat({ label, value, formatter, sub }) {
   );
 }
 
-export default function Ruptura({ dateRange, filial }) {
+// Dropdown de múltipla escolha (Departamento/Grupo/Subgrupo) — mesmo
+// padrão visual/markup do dropdown de Classificação de risco acima
+// (details/summary), só que as opções vêm do catálogo real em vez de
+// serem fixas, e o resumo no botão mostra quantas estão marcadas.
+function MultiCheckDropdown({ label, options, selected, onToggle }) {
+  const resumo = selected.size === 0 ? label : `${label} (${selected.size})`;
+  return (
+    <div className="rup-minimal-field">
+      <details className="rup-minimal-dropdown">
+        <summary className="rup-minimal-input" style={{ cursor: 'pointer' }}>
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {resumo}
+          </span>
+          <svg className="date-filter-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+        </summary>
+        <div className="rup-dropdown-menu scrollable">
+          {options.length === 0 && <div className="rup-dropdown-item" style={{ cursor: 'default' }}>Nenhuma opção</div>}
+          {options.map(v => (
+            <label key={v} className="rup-dropdown-item" title={v}>
+              <input type="checkbox" checked={selected.has(v)} onChange={() => onToggle(v)} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v}</span>
+            </label>
+          ))}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
+  // Filtro de dias é local da Ruptura (não fica mais no Topbar global) —
+  // só ela usa janela de tempo pra vendas; outras abas de Estoque não têm
+  // essa dimensão, então mudar aqui não deve afetar mais nada.
+  const [dateRange, setDateRange] = useState('60');
   const dias = DIAS_MAP[dateRange] ?? 60;
 
   const [state, setState] = useState({ status: 'idle', data: null, updatedAt: null, error: null });
   const [fastLoading, setFastLoading] = useState(false);
-  const [activeRiscos, setActiveRiscos] = useState(() => new Set(RISCO_ORDEM.map(r => r.key)));
-  const [activeLocais, setActiveLocais] = useState(new Set());
-  const [selectedDepartamento, setSelectedDepartamento] = useState(null);
-  const [selectedGrupo, setSelectedGrupo] = useState(null);
+  // Vazio = sem filtro (mostra tudo) — mesmo padrão de selectedDepartamentos/
+  // selectedGrupos/selectedSubgrupos: clicar ISOLA (só quem foi selecionado
+  // fica visível), não exclui. Antes começava cheio e clicar tirava da
+  // lista, fazendo o segmento clicado sumir e os outros ficarem — invertido
+  // do que o usuário esperava (clicar deveria isolar, não excluir).
+  const [activeRiscos, setActiveRiscos] = useState(() => new Set());
+  // Múltipla escolha (Set) — um operador pode atender mais de um
+  // departamento/grupo/subgrupo ao mesmo tempo. Set vazio = sem filtro
+  // (mostra tudo), igual ao antigo `null`.
+  const [selectedDepartamentos, setSelectedDepartamentos] = useState(() => new Set());
+  const [selectedGrupos, setSelectedGrupos] = useState(() => new Set());
+  const [selectedSubgrupos, setSelectedSubgrupos] = useState(() => new Set());
   const [sort, setSort] = useState({ key: null, dir: 'desc' });
   const [selectedProdutos, setSelectedProdutos] = useState(() => new Set());
+  const [aglutinarOn, setAglutinarOn] = useState(false);
+  const [aglutinarModal, setAglutinarModal] = useState(null);
+  const [rupturaCfg, setRupturaCfg] = useState(null);
   const pollRef = useRef(null);
   const riscoDetailsRef = useRef(null);
   const firstLoadDone = useRef(false);
+  const cfgAplicadoRef = useRef(false);
+
+  // Filial não tem seletor na tela (pedido do time de compras — a análise
+  // sempre roda pra rede inteira, sem opção de recorte por loja aqui,
+  // diferente de Indisponível que ainda usa o dropdown do Topbar). Fica
+  // travado no valor de Configurações > Estoque > Ruptura > Padrões da
+  // tela, que agora é o único jeito de mudar isso (sem UI aqui). "todas"
+  // é o valor padrão até a config carregar.
+  const filialFixa = rupturaCfg?.tela_filial_padrao || 'todas';
+
+  // Preferências de tela definidas em Configurações > Estoque > Ruptura
+  // (riscos marcados por padrão, Aglutinar ligado por padrão, truncamento
+  // de rótulo, separador/colunas do export). Aplicadas uma única vez, no
+  // primeiro carregamento — depois disso o usuário controla pela própria tela.
+  useEffect(() => {
+    api.getConfig().then(all => setRupturaCfg(all.ruptura)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (rupturaCfg && !cfgAplicadoRef.current) {
+      cfgAplicadoRef.current = true;
+      // Config padrão traz os 5 riscos marcados (herdado do modelo antigo,
+      // onde a lista cheia = "sem filtro"). No modelo atual (vazio = sem
+      // filtro, selecionado = isolado) uma lista com TODOS os riscos precisa
+      // virar Set vazio, senão o primeiro clique já parte de um set cheio e
+      // volta a se comportar como exclusão em vez de isolamento. Só aplica
+      // como isolamento de verdade quando for um subconjunto escolhido de
+      // propósito em Configurações.
+      if (rupturaCfg.tela_riscos_padrao?.length) {
+        const riscosPadrao = new Set(rupturaCfg.tela_riscos_padrao);
+        setActiveRiscos(riscosPadrao.size >= RISCO_ORDEM.length ? new Set() : riscosPadrao);
+      }
+      setAglutinarOn(!!rupturaCfg.aglutinar_ligado_por_padrao);
+      if (rupturaCfg.tela_dias_padrao) setDateRange(rupturaCfg.tela_dias_padrao);
+    }
+  }, [rupturaCfg]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
   }, []);
 
   const fetchState = useCallback(async () => {
-    const s = await api.getEstoqueRuptura(dias, filial);
+    const s = await api.getEstoqueRuptura(dias, filialFixa);
     setState(s);
-    if (s.status === 'ready' && s.data) {
-      setActiveLocais(new Set(s.data.locaisEstoque));
-    }
     if (s.status !== 'computing') stopPolling();
     return s;
-  }, [dias, filial, stopPolling]);
+  }, [dias, filialFixa, stopPolling]);
 
-  // Roda no primeiro carregamento e sempre que dias/filial mudam. Depois do
-  // primeiro carregamento, isso é rápido (poucos segundos) — não precisa do
-  // botão "Atualizar dados" de novo, só a lista de produtos ativos passa por ele.
+  // Roda no primeiro carregamento e sempre que dias/filialFixa mudam (a
+  // 2ª só muda quando a config termina de carregar, se for diferente de
+  // "todas"). Depois do primeiro carregamento, isso é rápido (poucos
+  // segundos) — não precisa do botão "Atualizar dados" de novo, só a lista
+  // de produtos ativos passa por ele.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -132,7 +218,7 @@ export default function Ruptura({ dateRange, filial }) {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dias, filial]);
+  }, [dias, filialFixa]);
 
   useEffect(() => {
     if (state.status === 'computing' && !pollRef.current) {
@@ -148,6 +234,7 @@ export default function Ruptura({ dateRange, filial }) {
       if (e.key === 'Escape' && riscoDetailsRef.current?.open) {
         riscoDetailsRef.current.open = false;
       }
+      if (e.key === 'Escape') setAglutinarModal(null);
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
@@ -159,16 +246,13 @@ export default function Ruptura({ dateRange, filial }) {
     fetchState();
   }
 
+  useEffect(() => {
+    onSyncStatusChange?.(state.status);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.status]);
+
   function toggleRisco(key) {
     setActiveRiscos(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
-  }
-
-  function toggleLocal(key) {
-    setActiveLocais(prev => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
@@ -185,13 +269,25 @@ export default function Ruptura({ dateRange, filial }) {
   }
 
   function handleLimparFiltros() {
-    setActiveRiscos(new Set(RISCO_ORDEM.map(r => r.key)));
-    setActiveLocais(new Set(state.data?.locaisEstoque ?? []));
-    setSelectedDepartamento(null);
-    setSelectedGrupo(null);
+    setActiveRiscos(new Set());
+    setSelectedDepartamentos(new Set());
+    setSelectedGrupos(new Set());
+    setSelectedSubgrupos(new Set());
     setSort({ key: null, dir: 'desc' });
     setSelectedProdutos(new Set());
   }
+
+  function toggleEmSet(setState, value) {
+    setState(prev => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value); else next.add(value);
+      return next;
+    });
+  }
+
+  // Expõe sincronizar/limpar filtros pro Topbar (só existem quando essa
+  // aba está selecionada) — mesma função que os botões locais já chamavam.
+  useImperativeHandle(ref, () => ({ sincronizar: handleAtualizar, limparFiltros: handleLimparFiltros }));
 
   // Clique normal isola só esse produto (clicar de novo no único selecionado
   // volta a mostrar todos); Ctrl/Cmd+clique acumula mais de um na isolação.
@@ -218,48 +314,81 @@ export default function Ruptura({ dateRange, filial }) {
   // nos estados idle/computing/error abaixo) — por isso fica antes dos
   // returns antecipados, com fallback pra state.data == null.
   const produtos = state.data?.produtos ?? [];
+  const produtosAglutinados = state.data?.produtosAglutinados ?? [];
+  // Só a TABELA troca de fonte conforme o toggle "Aglutinar" — KPIs e os
+  // gráficos de Departamento/Grupo/Status continuam sempre baseados nos
+  // produtos individuais (`produtos`), não mudam com o agrupamento.
+  const produtosTabelaFonte = aglutinarOn ? produtosAglutinados : produtos;
 
-  // Base pro donut de Status: respeita local/departamento/grupo, mas NÃO
-  // o pill de risco (senão o donut fica degenerado ao filtrar por um risco só).
-  const baseFiltrada = useMemo(() => produtos.filter(p =>
-    (p.locais.length === 0 || p.locais.some(l => activeLocais.has(l))) &&
-    (!selectedDepartamento || p.departamento === selectedDepartamento) &&
-    (!selectedGrupo || p.grupo === selectedGrupo)
-  ), [produtos, activeLocais, selectedDepartamento, selectedGrupo]);
+  // Base dos KPIs e do donut de Status: agora usa `produtosTabelaFonte` (a
+  // MESMA fonte da tabela) — antes usava sempre `produtos` individual,
+  // então com Aglutinar ligado o KPI "Itens com risco de ruptura" contava
+  // cada SKU separado enquanto a tabela já mostrava a família como 1 linha
+  // só, e os números nunca batiam. Respeita departamento/grupo/subgrupo,
+  // mas NÃO o pill de risco (senão o donut fica degenerado ao filtrar por
+  // um risco só).
+  const baseFiltrada = useMemo(() => produtosTabelaFonte.filter(p =>
+    (selectedDepartamentos.size === 0 || selectedDepartamentos.has(p.departamento)) &&
+    (selectedGrupos.size === 0 || selectedGrupos.has(p.grupo)) &&
+    (selectedSubgrupos.size === 0 || selectedSubgrupos.has(p.subgrupo))
+  ), [produtosTabelaFonte, selectedDepartamentos, selectedGrupos, selectedSubgrupos]);
+
+  // Opções dos 3 dropdowns fixos de Departamento/Grupo/Subgrupo — vêm do
+  // catálogo completo (`produtos`, não filtrado), pra não sumir opção da
+  // lista conforme outros filtros vão sendo aplicados (comportamento de
+  // slicer fixo, diferente do cross-filtro dos gráficos de barra abaixo).
+  const departamentoOptions = useMemo(() =>
+    [...new Set(produtos.map(p => p.departamento))].sort((a, b) => a.localeCompare(b, 'pt-BR')),
+  [produtos]);
+  const grupoOptions = useMemo(() =>
+    [...new Set(produtos.map(p => p.grupo))].sort((a, b) => a.localeCompare(b, 'pt-BR')),
+  [produtos]);
+  const subgrupoOptions = useMemo(() =>
+    [...new Set(produtos.map(p => p.subgrupo))].sort((a, b) => a.localeCompare(b, 'pt-BR')),
+  [produtos]);
 
   // Base pra tudo mais (tabela, KPIs, barras de Departamento/Grupo): soma
   // também o pill de risco — é o cross-filtro completo.
   const visibleProdutos = useMemo(() =>
-    baseFiltrada.filter(p => activeRiscos.has(p.risco)),
+    baseFiltrada.filter(p => activeRiscos.size === 0 || activeRiscos.has(p.risco)),
     [baseFiltrada, activeRiscos]);
 
   const emRiscoFiltrado = useMemo(() =>
     visibleProdutos.filter(p => p.risco !== 'sem-risco'),
     [visibleProdutos]);
 
+  // "Itens com risco de ruptura" continua só contando quem tem risco de
+  // verdade (emRiscoFiltrado). Já "Pendente Entrada"/"Pedido Pendente"
+  // agora somam de `visibleProdutos` (todos os filtrados, Sem Risco
+  // incluído) — pra bater com o total real da tabela de baixo, que nunca
+  // excluiu Sem Risco da soma.
   const statsFiltrados = useMemo(() => ({
     produtosEmRuptura: emRiscoFiltrado.length,
-    totalPendenteEntrada: round2(emRiscoFiltrado.reduce((a, p) => a + p.entrada, 0)),
-    totalPedidoPendente: round2(emRiscoFiltrado.reduce((a, p) => a + p.pedidos, 0)),
-  }), [emRiscoFiltrado]);
+    totalPendenteEntrada: round2(visibleProdutos.reduce((a, p) => a + p.entrada, 0)),
+    totalPedidoPendente: round2(visibleProdutos.reduce((a, p) => a + p.pedidos, 0)),
+  }), [emRiscoFiltrado, visibleProdutos]);
 
-  // Base do gráfico de Departamento: respeita local/grupo/risco, mas NÃO o
+  // Base do gráfico de Departamento: respeita grupo/risco, mas NÃO o
   // próprio departamento selecionado — senão, ao clicar, o gráfico reduz a
   // 1 barra só e não sobra nada pra clicar de novo e resetar (mesmo motivo
-  // do donut de Status não se auto-filtrar pelo pill de risco).
-  const baseParaDepartamento = useMemo(() => produtos.filter(p =>
-    (p.locais.length === 0 || p.locais.some(l => activeLocais.has(l))) &&
-    (!selectedGrupo || p.grupo === selectedGrupo) &&
-    activeRiscos.has(p.risco) && p.risco !== 'sem-risco'
-  ), [produtos, activeLocais, selectedGrupo, activeRiscos]);
+  // do donut de Status não se auto-filtrar pelo pill de risco). Usa
+  // `produtosTabelaFonte` (não `produtos`) pra contar do mesmo jeito que o
+  // KPI "Itens com risco de ruptura" — com Aglutinar ligado, conta famílias
+  // (1 linha por família), não cada SKU individual separado.
+  const baseParaDepartamento = useMemo(() => produtosTabelaFonte.filter(p =>
+    (selectedGrupos.size === 0 || selectedGrupos.has(p.grupo)) &&
+    (selectedSubgrupos.size === 0 || selectedSubgrupos.has(p.subgrupo)) &&
+    (activeRiscos.size === 0 || activeRiscos.has(p.risco)) && p.risco !== 'sem-risco'
+  ), [produtosTabelaFonte, selectedGrupos, selectedSubgrupos, activeRiscos]);
 
-  // Base do gráfico de Grupo: respeita local/departamento/risco, mas NÃO o
-  // próprio grupo selecionado, pelo mesmo motivo acima.
-  const baseParaGrupo = useMemo(() => produtos.filter(p =>
-    (p.locais.length === 0 || p.locais.some(l => activeLocais.has(l))) &&
-    (!selectedDepartamento || p.departamento === selectedDepartamento) &&
-    activeRiscos.has(p.risco) && p.risco !== 'sem-risco'
-  ), [produtos, activeLocais, selectedDepartamento, activeRiscos]);
+  // Base do gráfico de Grupo: respeita departamento/risco, mas NÃO o
+  // próprio grupo selecionado, pelo mesmo motivo acima. Mesma lógica de
+  // `produtosTabelaFonte` que o gráfico de Departamento.
+  const baseParaGrupo = useMemo(() => produtosTabelaFonte.filter(p =>
+    (selectedDepartamentos.size === 0 || selectedDepartamentos.has(p.departamento)) &&
+    (selectedSubgrupos.size === 0 || selectedSubgrupos.has(p.subgrupo)) &&
+    (activeRiscos.size === 0 || activeRiscos.has(p.risco)) && p.risco !== 'sem-risco'
+  ), [produtosTabelaFonte, selectedDepartamentos, selectedSubgrupos, activeRiscos]);
 
   // Contagem de SKUs em ruptura, não soma de unidades — um produto de
   // altíssimo giro (ex: tijolo, telha) não pode pesar mais que um produto
@@ -282,27 +411,84 @@ export default function Ruptura({ dateRange, filial }) {
     return RISCO_ORDEM.filter(r => r.key !== 'sem-risco' && counts[r.key] > 0).map(r => ({ key: r.key, label: r.label, value: counts[r.key] }));
   }, [baseFiltrada]);
 
+  // Mesmo cruzamento de filtros de cima (Departamento/Grupo/Subgrupo/Risco),
+  // só que a partir da fonte que muda com o toggle "Aglutinar" — é isso que
+  // alimenta a tabela (linhas de família também têm departamento/grupo/
+  // subgrupo/risco, então os mesmos filtros funcionam nelas igual num
+  // produto normal).
+  const baseFiltradaTabela = useMemo(() => produtosTabelaFonte.filter(p =>
+    (selectedDepartamentos.size === 0 || selectedDepartamentos.has(p.departamento)) &&
+    (selectedGrupos.size === 0 || selectedGrupos.has(p.grupo)) &&
+    (selectedSubgrupos.size === 0 || selectedSubgrupos.has(p.subgrupo))
+  ), [produtosTabelaFonte, selectedDepartamentos, selectedGrupos, selectedSubgrupos]);
+
+  const visibleProdutosTabela = useMemo(() =>
+    baseFiltradaTabela.filter(p => activeRiscos.size === 0 || activeRiscos.has(p.risco)),
+    [baseFiltradaTabela, activeRiscos]);
+
   const tableTotals = useMemo(() => ({
-    vendas: round2(visibleProdutos.reduce((a, p) => a + p.vendas, 0)),
-    estoque: round2(visibleProdutos.reduce((a, p) => a + p.estoque, 0)),
-    entrada: round2(visibleProdutos.reduce((a, p) => a + p.entrada, 0)),
-  }), [visibleProdutos]);
+    vendas: round2(visibleProdutosTabela.reduce((a, p) => a + p.vendas, 0)),
+    estoque: round2(visibleProdutosTabela.reduce((a, p) => a + p.estoque, 0)),
+    entrada: round2(visibleProdutosTabela.reduce((a, p) => a + p.entrada, 0)),
+  }), [visibleProdutosTabela]);
 
   const sortedProdutos = useMemo(() => {
-    if (!sort.key) return visibleProdutos;
+    if (!sort.key) return visibleProdutosTabela;
     const dirMul = sort.dir === 'asc' ? 1 : -1;
-    return [...visibleProdutos].sort((a, b) => {
+    return [...visibleProdutosTabela].sort((a, b) => {
       const va = sortValue(a, sort.key), vb = sortValue(b, sort.key);
       if (va < vb) return -1 * dirMul;
       if (va > vb) return 1 * dirMul;
       return 0;
     });
-  }, [visibleProdutos, sort]);
+  }, [visibleProdutosTabela, sort]);
 
   const rowsToShow = useMemo(() => {
     if (selectedProdutos.size === 0) return sortedProdutos;
-    return sortedProdutos.filter(p => selectedProdutos.has(p.cod));
+    return sortedProdutos.filter(p => selectedProdutos.has(p.rowId));
   }, [sortedProdutos, selectedProdutos]);
+
+  // Exporta exatamente as linhas visíveis na tabela (mesmos filtros,
+  // ordenação e isolação aplicados) pra um .csv que o Excel abre direto —
+  // separador e colunas vêm de Configurações > Estoque > Ruptura >
+  // Exportação (padrão: ';' e as 14 colunas, igual ao comportamento de
+  // sempre) — BOM UTF-8 pra acentuação certa em qualquer separador.
+  function handleExportarExcel() {
+    const colDefs = {
+      cod: { header: 'Código', get: (p) => p.cod },
+      desc: { header: 'Descrição', get: (p) => p.desc },
+      marca: { header: 'Marca', get: (p) => p.marca },
+      vendas: { header: `Total vendas ${dias}d`, get: (p) => Number(p.vendas).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+      estoque: { header: 'Estoque atual', get: (p) => fmtNum(p.estoque) },
+      entrada: { header: 'Entradas pendentes', get: (p) => fmtNum(p.entrada) },
+      pedidos: { header: 'Pedidos pendentes', get: (p) => fmtNum(p.pedidos) },
+      diasPedidosPend: { header: 'Dias atraso pedido', get: (p) => p.diasPedidosPend },
+      diasPendEntrada: { header: 'Dias atraso entrada', get: (p) => p.diasPendEntrada },
+      projecao: { header: `Projeção ${dias}d`, get: (p) => fmtNum(p.projecao) },
+      departamento: { header: 'Departamento', get: (p) => p.departamento },
+      grupo: { header: 'Grupo', get: (p) => p.grupo },
+      subgrupo: { header: 'Subgrupo', get: (p) => p.subgrupo },
+      risco: { header: 'Ruptura', get: (p) => RISCO_MAP[p.risco]?.label ?? p.risco },
+    };
+    const colunas = (rupturaCfg?.export_colunas?.length ? rupturaCfg.export_colunas : Object.keys(colDefs))
+      .filter((key) => colDefs[key]);
+    const separador = rupturaCfg?.export_separador_csv || ';';
+
+    const headers = colunas.map((key) => colDefs[key].header);
+    const linhas = rowsToShow.map((p) => colunas.map((key) => colDefs[key].get(p)));
+    const escapar = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [headers, ...linhas].map(row => row.map(escapar).join(separador)).join('\r\n');
+    const bom = String.fromCharCode(0xFEFF);
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ruptura_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 
   if (state.status === 'idle') {
     return (
@@ -342,7 +528,7 @@ export default function Ruptura({ dateRange, filial }) {
     );
   }
 
-  const { locaisEstoque, produtosAtivosTotal } = state.data;
+  const { produtosAtivosTotal } = state.data;
   const updatedLabel = state.updatedAt
     ? new Date(state.updatedAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
     : '—';
@@ -353,15 +539,17 @@ export default function Ruptura({ dateRange, filial }) {
       {/* 1. Filtros Livres e Minimalistas (Design Limpo) */}
       <div className="rup-filters">
         <div className="rup-filters-row">
-          
+
+          <FilterDropdown icon={CalendarIcon} options={RANGES} selectedKey={dateRange} onSelect={setDateRange} footer="Vale só pra Ruptura — outras abas não têm janela de tempo." />
+
           {/* Classificação de risco (Sanfona/Dropdown) */}
           <div className="rup-minimal-field">
             <details className="rup-minimal-dropdown" ref={riscoDetailsRef}>
-              <summary className="rup-minimal-input" style={{ cursor: 'pointer', padding: '0 12px' }}>
-                <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--text-primary)' }}>
+              <summary className="rup-minimal-input" style={{ cursor: 'pointer' }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-primary)' }}>
                   Classificação de risco
                 </span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+                <svg className="date-filter-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </summary>
               <div className="rup-dropdown-menu">
                 {RISCO_ORDEM.map(o => (
@@ -376,21 +564,18 @@ export default function Ruptura({ dateRange, filial }) {
             </details>
           </div>
 
-          {/* Limpar filtros + Sincronizar jogados elegantemente para a direita */}
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="icon-btn" onClick={handleLimparFiltros}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
-              Limpar filtros
-            </button>
-            <AtualizarBtn label={state.status === 'computing' ? 'Sincronizando...' : 'Sincronizar'} />
-          </div>
+          <MultiCheckDropdown label="Departamento" options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
+          <MultiCheckDropdown label="Grupo" options={grupoOptions} selected={selectedGrupos} onToggle={(v) => toggleEmSet(setSelectedGrupos, v)} />
+          <MultiCheckDropdown label="Subgrupo" options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
 
+          {/* Sincronizar e Limpar filtros agora ficam só no Topbar (ao lado
+              da Filial) — disparam a ação da aba de Estoque selecionada. */}
         </div>
       </div>
 
       {/* 2. KPIs Oficiais (Exatamente igual à aba Geral) */}
       <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        <RupStat label="Itens em Ruptura" value={statsFiltrados.produtosEmRuptura} formatter={v => Math.round(v).toLocaleString('pt-BR')} />
+        <RupStat label="Itens com risco de ruptura" value={statsFiltrados.produtosEmRuptura} formatter={v => Math.round(v).toLocaleString('pt-BR')} />
         <RupStat label="Pendente Entrada" value={statsFiltrados.totalPendenteEntrada} formatter={v => Math.round(v).toLocaleString('pt-BR')} />
         <RupStat label="Pedido Pendente" value={statsFiltrados.totalPedidoPendente} formatter={v => Math.round(v).toLocaleString('pt-BR')} />
       </div>
@@ -399,14 +584,16 @@ export default function Ruptura({ dateRange, filial }) {
         <VCarouselChart
           title="Departamento"
           data={withSeriesColors(departamentoFiltrado)} valueFormatter={fmtNum}
-          selectedLabel={selectedDepartamento}
-          onBarClick={(d) => setSelectedDepartamento(prev => prev === d.label ? null : d.label)}
+          selectedLabel={selectedDepartamentos}
+          onBarClick={(d) => toggleEmSet(setSelectedDepartamentos, d.label)}
+          truncateAt={rupturaCfg?.grafico_truncar_rotulo}
         />
         <VCarouselChart
           title="Grupo"
           data={withSeriesColors(grupoFiltrado)} valueFormatter={fmtNum}
-          selectedLabel={selectedGrupo}
-          onBarClick={(d) => setSelectedGrupo(prev => prev === d.label ? null : d.label)}
+          selectedLabel={selectedGrupos}
+          onBarClick={(d) => toggleEmSet(setSelectedGrupos, d.label)}
+          truncateAt={rupturaCfg?.grafico_truncar_rotulo}
         />
         <div className="rup-donut-col">
           <DonutChart
@@ -426,27 +613,38 @@ export default function Ruptura({ dateRange, filial }) {
             <div className="card-subtitle">Mostrando {fmtNum(rowsToShow.length)} produtos</div>
           </div>
           <div className="card-actions">
-            <CheckDropdown icon={LocalIcon} label="Local de estoque" options={locaisEstoque} selected={activeLocais} onToggle={toggleLocal} />
+            <button className="icon-btn" onClick={handleExportarExcel} title="Exporta a tabela (com os filtros e ordenação atuais) em .csv">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>
+              Exportar Excel
+            </button>
+            <button
+              className={'icon-btn' + (aglutinarOn ? ' aglutinar-on' : '')}
+              onClick={() => setAglutinarOn(v => !v)}
+              title="Agrupa produtos da mesma família (mesma descrição, marcas diferentes) numa única linha — clique na linha pra ver os produtos que compõem a família"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="12" r="6" /><circle cx="15" cy="12" r="6" /></svg>
+              Aglutinar
+            </button>
           </div>
         </div>
         <div className="table-scroll" style={{ overflowX: 'auto' }}>
-          <table className="data-table visible">
+          <table className="data-table visible rup-table-compact">
             <thead>
               <tr>
+                <Th col="risco" sort={sort} onSort={toggleSort}>Ruptura</Th>
                 <Th col="cod" sort={sort} onSort={toggleSort}>Código</Th>
                 <Th col="desc" sort={sort} onSort={toggleSort}>Descrição</Th>
-                <Th col="marca" sort={sort} onSort={toggleSort}>Marca</Th>
-                <Th col="vendas" num sort={sort} onSort={toggleSort}>Total vendas {dias}d</Th>
-                <Th col="estoque" num sort={sort} onSort={toggleSort}>Estoque atual</Th>
-                <Th col="entrada" num sort={sort} onSort={toggleSort}>Entradas pendentes</Th>
-                <Th col="pedidos" num sort={sort} onSort={toggleSort}>Pedidos pendentes</Th>
-                <Th col="diasPedidosPend" num sort={sort} onSort={toggleSort}>Dias atraso pedido</Th>
-                <Th col="diasPendEntrada" num sort={sort} onSort={toggleSort}>Dias atraso entrada</Th>
-                <Th col="projecao" num sort={sort} onSort={toggleSort}>Projeção {dias}d</Th>
+                <Th col="marca" className="col-marca" sort={sort} onSort={toggleSort}>Marca</Th>
+                <Th col="vendas" num sort={sort} onSort={toggleSort}>Total vendas<br />{dias}d</Th>
+                <Th col="estoque" num sort={sort} onSort={toggleSort}>Estoque<br />atual</Th>
+                <Th col="entrada" num sort={sort} onSort={toggleSort}>Entradas<br />pendentes</Th>
+                <Th col="pedidos" num sort={sort} onSort={toggleSort}>Pedidos<br />pendentes</Th>
+                <Th col="diasPedidosPend" num sort={sort} onSort={toggleSort}>Dias atraso<br />pedido</Th>
+                <Th col="diasPendEntrada" num sort={sort} onSort={toggleSort}>Dias atraso<br />entrada</Th>
+                <Th col="projecao" num sort={sort} onSort={toggleSort}>Projeção<br />{dias}d</Th>
                 <Th col="departamento" sort={sort} onSort={toggleSort}>Departamento</Th>
                 <Th col="grupo" sort={sort} onSort={toggleSort}>Grupo</Th>
                 <Th col="subgrupo" sort={sort} onSort={toggleSort}>Subgrupo</Th>
-                <Th col="risco" sort={sort} onSort={toggleSort}>Ruptura</Th>
               </tr>
             </thead>
             <tbody>
@@ -455,13 +653,27 @@ export default function Ruptura({ dateRange, filial }) {
               )}
               {rowsToShow.map(p => (
                 <tr
-                  key={p.cod} className={selectedProdutos.has(p.cod) ? 'selected' : ''}
-                  onClick={(e) => handleProdutoClick(p.cod, e)}
+                  key={p.rowId}
+                  className={(selectedProdutos.has(p.rowId) ? 'selected ' : '') + (p.isFamilia ? 'rup-aglutinar-familia-row' : '')}
+                  title={p.isFamilia ? 'Clique pra ver todos os produtos que compõem a família' : undefined}
+                  onClick={(e) => p.isFamilia ? setAglutinarModal(p) : handleProdutoClick(p.rowId, e)}
                   onDoubleClick={() => setSelectedProdutos(new Set())}
                 >
-                  <td className="emph">{p.cod}</td>
+                  <td>
+                    <span className="risk-pill">
+                      <span className="fdot" style={{ background: RISCO_MAP[p.risco]?.color }} />
+                      <span>{RISCO_MAP[p.risco]?.label ?? p.risco}</span>
+                    </span>
+                  </td>
+                  <td className="emph">
+                    {p.isFamilia ? (
+                      <span className="rup-aglutinar-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="12" r="6" /><circle cx="15" cy="12" r="6" /></svg>
+                      </span>
+                    ) : p.cod}
+                  </td>
                   <td className="desc" title={p.desc}>{p.desc}</td>
-                  <td>{p.marca}</td>
+                  <td className="col-marca">{p.isFamilia ? '' : p.marca}</td>
                   <td className="num">{Number(p.vendas).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="num">{fmtNum(p.estoque)}</td>
                   <td className="num">{fmtNum(p.entrada)}</td>
@@ -472,18 +684,12 @@ export default function Ruptura({ dateRange, filial }) {
                   <td>{p.departamento}</td>
                   <td>{p.grupo}</td>
                   <td>{p.subgrupo}</td>
-                  <td>
-                    <span className="risk-pill">
-                      <span className="fdot" style={{ background: RISCO_MAP[p.risco]?.color }} />
-                      <span>{RISCO_MAP[p.risco]?.label ?? p.risco}</span>
-                    </span>
-                  </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr>
-                <td>Total</td><td></td><td></td>
+                <td></td><td>Total</td><td></td><td></td>
                 <td className="num">{tableTotals.vendas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td className="num">{fmtNum(tableTotals.estoque)}</td>
                 <td className="num">{fmtNum(tableTotals.entrada)}</td>
@@ -493,6 +699,68 @@ export default function Ruptura({ dateRange, filial }) {
           </table>
         </div>
       </div>
+
+      {aglutinarModal && (
+        <div className="rup-modal-backdrop" onClick={() => setAglutinarModal(null)}>
+          <div className="rup-modal card" onClick={(e) => e.stopPropagation()}>
+            <div className="card-head">
+              <div>
+                <div className="card-title table-title">{aglutinarModal.desc}</div>
+                <div className="card-subtitle">Produtos que compõem essa família</div>
+              </div>
+              <button className="icon-btn" onClick={() => setAglutinarModal(null)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                Fechar
+              </button>
+            </div>
+            <div className="table-scroll" style={{ overflowX: 'auto' }}>
+              <table className="data-table visible rup-table-compact">
+                <thead>
+                  <tr>
+                    <th><span className="th-stack">Ruptura</span></th>
+                    <th><span className="th-stack">Código</span></th>
+                    <th><span className="th-stack">Descrição</span></th>
+                    <th className="col-marca"><span className="th-stack">Marca</span></th>
+                    <th className="num"><span className="th-stack">Total vendas<br />{dias}d</span></th>
+                    <th className="num"><span className="th-stack">Estoque<br />atual</span></th>
+                    <th className="num"><span className="th-stack">Entradas<br />pendentes</span></th>
+                    <th className="num"><span className="th-stack">Pedidos<br />pendentes</span></th>
+                    <th className="num"><span className="th-stack">Dias atraso<br />pedido</span></th>
+                    <th className="num"><span className="th-stack">Dias atraso<br />entrada</span></th>
+                    <th className="num"><span className="th-stack">Projeção<br />{dias}d</span></th>
+                    <th><span className="th-stack">Subgrupo</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(aglutinarModal.itens ?? []).map(it => (
+                    <tr key={it.cod}>
+                      <td>
+                        <span className="risk-pill">
+                          <span className="fdot" style={{ background: RISCO_MAP[it.risco]?.color }} />
+                          <span>{RISCO_MAP[it.risco]?.label ?? it.risco}</span>
+                        </span>
+                      </td>
+                      <td className="emph">{it.cod}</td>
+                      <td className="desc" title={it.desc}>{it.desc}</td>
+                      <td className="col-marca">{it.marca}</td>
+                      <td className="num">{Number(it.vendas).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="num">{fmtNum(it.estoque)}</td>
+                      <td className="num">{fmtNum(it.entrada)}</td>
+                      <td className="num">{fmtNum(it.pedidos)}</td>
+                      <td className="num">{it.diasPedidosPend}</td>
+                      <td className="num">{it.diasPendEntrada}</td>
+                      <td className="num">{fmtNum(it.projecao)}</td>
+                      <td>{it.subgrupo}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+});
+
+export default Ruptura;

@@ -33,7 +33,7 @@ export default function DonutChart({ title, subtitle, data, centerFormatter = fm
         <svg viewBox={`0 0 ${size} ${size}`}>
           <circle cx={cx} cy={cy} r={r} fill="none" stroke={theme.gridLine} strokeWidth={sw} />
           {segments.map((s, i) => {
-            const dimmed = selectedKeys && !selectedKeys.has(s.key);
+            const dimmed = selectedKeys && selectedKeys.size > 0 && !selectedKeys.has(s.key);
             return (
               <circle
                 key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth={hoverI === i ? sw + 4 : sw}
@@ -54,7 +54,7 @@ export default function DonutChart({ title, subtitle, data, centerFormatter = fm
         {data.map((d, i) => (
           <div
             className="legend-item" key={i}
-            style={{ cursor: onSegmentClick ? 'pointer' : 'default', opacity: selectedKeys && !selectedKeys.has(d.key) ? 0.4 : 1 }}
+            style={{ cursor: onSegmentClick ? 'pointer' : 'default', opacity: selectedKeys && selectedKeys.size > 0 && !selectedKeys.has(d.key) ? 0.4 : 1 }}
             onClick={() => onSegmentClick && onSegmentClick(d, i)}
           >
             <span className="legend-swatch" style={{ background: d.color }} />

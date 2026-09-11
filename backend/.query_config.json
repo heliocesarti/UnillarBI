@@ -10,6 +10,208 @@
     "operacao_entrada": "Entrada por COMPRA",
     "permitecompra": "A",
     "permitevenda": "A",
-    "pro_status": "A"
+    "pro_status": "A",
+    "situacoes_pedido_pendente": [
+      "NÃO ENTREGUE",
+      "PARCIAL"
+    ],
+    "entrada_periodo": {
+      "modo": "dias",
+      "dias": 365,
+      "data_inicio": null,
+      "data_fim": null
+    },
+    "pedido_periodo": {
+      "modo": "dias",
+      "dias": 365,
+      "data_inicio": null,
+      "data_fim": null
+    },
+    "aglutinar_ligado_por_padrao": true,
+    "aglutinar_prefixo_palavras": 3,
+    "aglutinar_prefixo_excecoes": [
+      {
+        "nivel": "grupo",
+        "valores": [
+          "ESTOFADO"
+        ],
+        "palavras": 2
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "CABECEIRA"
+        ],
+        "palavras": 2
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "RACK"
+        ],
+        "palavras": 1
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "FRUTEIRA"
+        ],
+        "palavras": 2
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "MULTIUSO"
+        ],
+        "palavras": 2
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "SUPORTE"
+        ],
+        "palavras": 2
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "FOGAO"
+        ],
+        "palavras": 2
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "TV"
+        ],
+        "palavras": 2
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "CAPACETES"
+        ],
+        "palavras": 2
+      }
+    ],
+    "tela_dias_padrao": "60",
+    "tela_filial_padrao": "todas",
+    "tela_riscos_padrao": [
+      "ruptura",
+      "emergencia",
+      "urgencia",
+      "alta",
+      "media",
+      "sem-risco"
+    ],
+    "grafico_truncar_rotulo": 8,
+    "export_separador_csv": ";",
+    "export_colunas": [
+      "cod",
+      "desc",
+      "marca",
+      "vendas",
+      "estoque",
+      "entrada",
+      "pedidos",
+      "diasPedidosPend",
+      "diasPendEntrada",
+      "projecao",
+      "departamento",
+      "grupo",
+      "subgrupo",
+      "risco"
+    ]
+  },
+  "excesso": {
+    "departamento_excluido": "ALMOXARIFADO",
+    "locais_kpi_custo": [
+      "BALCAO ENTREGA CALCADOS [01]",
+      "CALÇADOS PROMOÇÃO [01]",
+      "DEP ALFAVILE [01]",
+      "DEP CALÇADOS [01]",
+      "DEP LJ CEL SALA 01 [01]",
+      "DEP LOJA MOV ELET [01]",
+      "DEP LOJA PNEUS [01]",
+      "DEP P. DUTRA [09]",
+      "FORNECEDOR [01]",
+      "LOJA [01]",
+      "LOJA ESPERANTINOPOLIS",
+      "LOJA ITAIPAVA",
+      "LOJA JENIPAPO DOS VIEIRAS",
+      "LOJA P. DUTRA [09]",
+      "OFICINA PIT STOP [01]",
+      "PISOS DIVERSOS",
+      "PONTA DE ESTOQUE",
+      "PROMOÇÃO P. DUTRA [09]",
+      "RESERVADO SORTEIOS [01]",
+      "SALDÃO DEP ALFAVILE [01]",
+      "SEMI NOVO ALFAVILE [01]",
+      "SEMI NOVO ESPERANTINOPOLIS",
+      "SEMI NOVO ITAIPAVA",
+      "SEMI NOVO LOJA [01]",
+      "TRIAGEM AVARIA/DEVOLUÇÃO[06]",
+      "UNIZAP [02]",
+      "V EX 01 [01]",
+      "V EX 03 [01]"
+    ],
+    "locais_padrao": [
+      "BALCAO ENTREGA CALCADOS [01]",
+      "CALÇADOS PROMOÇÃO [01]",
+      "DEP ALFAVILE [01]",
+      "DEP CALÇADOS [01]",
+      "DEP LJ CEL SALA 01 [01]",
+      "DEP LOJA MOV ELET [01]",
+      "DEP LOJA PNEUS [01]",
+      "DEP P. DUTRA [09]",
+      "FORNECEDOR [01]",
+      "LOJA [01]",
+      "LOJA ESPERANTINOPOLIS",
+      "LOJA ITAIPAVA",
+      "LOJA JENIPAPO DOS VIEIRAS",
+      "LOJA P. DUTRA [09]",
+      "OFICINA PIT STOP [01]",
+      "PISOS DIVERSOS",
+      "PONTA DE ESTOQUE",
+      "PROMOÇÃO P. DUTRA [09]",
+      "RESERVADO SORTEIOS [01]",
+      "SALDÃO DEP ALFAVILE [01]",
+      "SEMI NOVO ALFAVILE [01]",
+      "SEMI NOVO ESPERANTINOPOLIS",
+      "SEMI NOVO ITAIPAVA",
+      "SEMI NOVO LOJA [01]",
+      "TRIAGEM AVARIA/DEVOLUÇÃO[06]",
+      "UNIZAP [02]",
+      "V EX 01 [01]",
+      "V EX 03 [01]",
+      "DEVOLUÇÃO P. DUTRA [09]"
+    ],
+    "dias_selecionado_padrao": "60"
+  },
+  "indisponivel": {
+    "locais_por_categoria": {
+      "assistencia": [
+        "ASSIST TECNICA LJ P. DUTRA",
+        "ASSIT TEC AUTZDA [01]",
+        "ASSIT TEC DP [01]"
+      ],
+      "almoxarifado": [
+        "ALMOXARIFADO [01]",
+        "ALMOXARIFADO [06]",
+        "ALMOXARIFADO [07]"
+      ],
+      "devolucao": [
+        "DEVOLUÇÃO [06]"
+      ],
+      "emprestimo": [
+        "EMPRÉSTIMO",
+        "EMPRESTIMO [01]",
+        "EMPRESTIMO [06]",
+        "EMPRESTIMO P. DUTRA"
+      ]
+    }
+  },
+  "visibilidade": {
+    "estoque_subtabs_ocultas": []
   }
 }

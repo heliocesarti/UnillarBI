@@ -5,6 +5,17 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Unillar BI — Painel de Análises</title>
+    <script>
+      // Aplica o tema salvo ANTES da página pintar, pra não piscar
+      // escuro->claro (ou o contrário) no primeiro instante.
+      try {
+        var t = localStorage.getItem('unillarbi_theme');
+        if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      } catch (e) {}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>

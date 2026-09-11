@@ -16,9 +16,10 @@ export default function FilterDropdown({ icon, options, selectedKey, onSelect, f
 
   return (
     <div className="date-filter" ref={ref}>
-      <button className="date-filter-btn" onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}>
+      <button className="date-filter-btn" onClick={() => setOpen(o => !o)}>
         {icon}
         <span>{selectedLabel}</span>
+        <svg className={'date-filter-chevron' + (open ? ' open' : '')} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
       </button>
       <div className={'date-menu' + (open ? ' open' : '')}>
         {options.map(o => (

@@ -25,6 +25,71 @@ _CONFIG_FILE = Path(__file__).resolve().parent.parent / ".query_config.json"
 
 MODOS_VALIDOS = {"dias", "mes_atual", "ano_atual", "livre"}
 
+# Valores reais confirmados direto no banco (só leitura) — usados pra
+# validar os campos de múltipla escolha abaixo.
+SITUACOES_PEDIDO_VALIDAS = {"CANCELADO", "ENTREGUE", "NÃO ENTREGUE", "PARCIAL"}
+RISCOS_VALIDOS = {"ruptura", "emergencia", "urgencia", "alta", "media", "sem-risco"}
+DIAS_TELA_VALIDOS = {"7", "30", "60", "90", "12m"}
+SEPARADORES_CSV_VALIDOS = {";", ","}
+COLUNAS_EXPORT_VALIDAS = {
+    "cod", "desc", "marca", "vendas", "estoque", "entrada", "pedidos",
+    "diasPedidosPend", "diasPendEntrada", "projecao", "departamento",
+    "grupo", "subgrupo", "risco",
+}
+
+# Catálogo completo de locais de estoque que existem hoje em
+# z_dw_006.localestoqueproduto (conferido direto no banco, só leitura, em
+# 27/08/2026) — usado tanto pra validar a config de Indisponível quanto
+# pra popular a lista de opções na tela.
+LOCAIS_ESTOQUE_VALIDOS = {
+    "ALMOXARIFADO [01]", "ALMOXARIFADO [06]", "ALMOXARIFADO [07]",
+    "ASSIST TECNICA LJ P. DUTRA", "ASSIT TEC AUTZDA [01]", "ASSIT TEC DP [01]",
+    "BALCAO ENTREGA CALCADOS [01]", "CALÇADOS PROMOÇÃO [01]",
+    "DEP ALFAVILE [01]", "DEP CALÇADOS [01]", "DEP LJ CEL SALA 01 [01]",
+    "DEP LOJA MOV ELET [01]", "DEP LOJA PNEUS [01]", "DEP P. DUTRA [09]",
+    "DEVOLUÇÃO [06]", "DEVOLUÇÃO P. DUTRA [09]",
+    "EMPRÉSTIMO", "EMPRESTIMO [01]", "EMPRESTIMO [06]", "EMPRESTIMO P. DUTRA",
+    "FORNECEDOR [01]", "LOJA [01]", "LOJA ESPERANTINOPOLIS", "LOJA ITAIPAVA",
+    "LOJA JENIPAPO DOS VIEIRAS", "LOJA P. DUTRA [09]", "OFICINA PIT STOP [01]",
+    "PISOS DIVERSOS", "PONTA DE ESTOQUE", "PROMOÇÃO P. DUTRA [09]",
+    "RESERVADO SORTEIOS [01]", "SALDÃO DEP ALFAVILE [01]", "SALDÃO ESPERANT [06]",
+    "SEMI NOVO ALFAVILE [01]", "SEMI NOVO ESPERANTINOPOLIS", "SEMI NOVO ITAIPAVA",
+    "SEMI NOVO JENIPAPO DOS VIEIRAS", "SEMI NOVO LOJA [01]", "SEMI NOVO P. DUTRA [09]",
+    "TRIAGEM AVARIA/DEVOLUÇÃO[06]", "UNIZAP [02]", "V EX 01 [01]", "V EX 03 [01]",
+}
+
+CATEGORIAS_INDISPONIVEL_VALIDAS = {"assistencia", "almoxarifado", "devolucao", "emprestimo"}
+
+DIAS_EXCESSO_VALIDOS = {"30", "60", "90", "120", "150", "180"}
+
+# Sub-abas reais de Estoque (chaves idênticas a `SUBTABS` em
+# frontend/src/views/estoque/Estoque.jsx) — usado pra validar quais podem
+# ser ocultadas do menu ao vivo pela tela de Visibilidade.
+ESTOQUE_SUBTABS_VALIDAS = {
+    "geral", "sem-giro", "ultimo-estoque", "inativo-compra",
+    "margem", "excesso", "indisponivel", "ruptura",
+}
+
+# Locais usados nos 2 filtros de visual da tela Excesso (mandados pelo
+# usuário direto do Power BI em 28/08/2026, conferidos contra o catálogo
+# real acima). "locais_kpi_custo" (28 itens) só vale pro KPI "Preço de
+# custo"; "locais_padrao" (29 itens = os mesmos 28 + Devolução P. Dutra)
+# vale pro KPI "Preço de venda", KPI "Produtos em excesso", os 3 Cards e a
+# tabela — inconsistência confirmada 2x com o usuário, não é engano.
+LOCAIS_EXCESSO_KPI_CUSTO = [
+    "BALCAO ENTREGA CALCADOS [01]", "CALÇADOS PROMOÇÃO [01]",
+    "DEP ALFAVILE [01]", "DEP CALÇADOS [01]", "DEP LJ CEL SALA 01 [01]",
+    "DEP LOJA MOV ELET [01]", "DEP LOJA PNEUS [01]", "DEP P. DUTRA [09]",
+    "FORNECEDOR [01]", "LOJA [01]", "LOJA ESPERANTINOPOLIS", "LOJA ITAIPAVA",
+    "LOJA JENIPAPO DOS VIEIRAS", "LOJA P. DUTRA [09]", "OFICINA PIT STOP [01]",
+    "PISOS DIVERSOS", "PONTA DE ESTOQUE", "PROMOÇÃO P. DUTRA [09]",
+    "RESERVADO SORTEIOS [01]", "SALDÃO DEP ALFAVILE [01]",
+    "SEMI NOVO ALFAVILE [01]", "SEMI NOVO ESPERANTINOPOLIS", "SEMI NOVO ITAIPAVA",
+    "SEMI NOVO LOJA [01]", "TRIAGEM AVARIA/DEVOLUÇÃO[06]", "UNIZAP [02]",
+    "V EX 01 [01]", "V EX 03 [01]",
+]
+LOCAIS_EXCESSO_PADRAO = LOCAIS_EXCESSO_KPI_CUSTO + ["DEVOLUÇÃO P. DUTRA [09]"]
+
 DEFAULT_CONFIG = {
     "ruptura": {
         # Teto fixo de 1 ano — cobre a maior opção do filtro de dias do
@@ -37,7 +102,78 @@ DEFAULT_CONFIG = {
         "permitevenda": "A",
         # Terceira trava de elegibilidade (z_dw_011) além de permitecompra/permitevenda.
         "pro_status": "A",
-    }
+        # Medida Pedidos_Pendentes: quais situações de item de pedido
+        # contam como "a caminho". Valor abaixo reproduz exatamente o
+        # comportamento fixo que existia antes disso virar parâmetro.
+        "situacoes_pedido_pendente": ["NÃO ENTREGUE", "PARCIAL"],
+        # Janela de "quando o documento foi emitido" (z_dw_026_capas /
+        # z_dw_029_capas .data_emissao) pra Pendente Entrada e Pedido
+        # Pendente — igual a `vendas_periodo`, cada um independente.
+        # Restaurado em 28/08/2026: essa era a regra original mandada pelo
+        # usuário (corte de 1 ano na medida `Qtd_Total_Pendentes`), que
+        # tinha se perdido na implementação — sem isso, nota antiga nunca
+        # baixada ficava contando pra sempre.
+        "entrada_periodo": {"modo": "dias", "dias": 365, "data_inicio": None, "data_fim": None},
+        "pedido_periodo": {"modo": "dias", "dias": 365, "data_inicio": None, "data_fim": None},
+        # Feature Aglutinar (sugestão de substitutos na Ruptura).
+        "aglutinar_ligado_por_padrao": True,
+        "aglutinar_prefixo_palavras": 3,
+        # Exceções ao valor global acima, por Departamento/Grupo/Subgrupo
+        # (pedido pelo usuário em 02/09/2026). Cada item: {nivel, valores,
+        # palavras} — "valores" é uma lista (múltipla escolha: pode marcar
+        # mais de um Departamento/Grupo/Subgrupo pra valer o mesmo nº de
+        # palavras). Resolução por especificidade — subgrupo vence grupo,
+        # que vence departamento, que vence o valor global — ver
+        # `_n_palavras_para` em ruptura_query.py.
+        "aglutinar_prefixo_excecoes": [],
+        # Preferências de tela ao abrir a aba Ruptura (não mudam cálculo
+        # nenhum, só o estado inicial dos filtros/gráficos).
+        "tela_dias_padrao": "60",
+        "tela_filial_padrao": "todas",
+        "tela_riscos_padrao": ["ruptura", "emergencia", "urgencia", "alta", "media", "sem-risco"],
+        "grafico_truncar_rotulo": 8,
+        # Exportação em Excel/CSV da tabela de Ruptura.
+        "export_separador_csv": ";",
+        "export_colunas": [
+            "cod", "desc", "marca", "vendas", "estoque", "entrada", "pedidos",
+            "diasPedidosPend", "diasPendEntrada", "projecao", "departamento",
+            "grupo", "subgrupo", "risco",
+        ],
+    },
+    "excesso": {
+        # Departamento fora da análise (os 2 filtros de visual do Power
+        # BI, mandados pelo usuário em 28/08/2026 — confirmado direto no
+        # banco). Locais das 2 listas ficam em LOCAIS_EXCESSO_KPI_CUSTO/
+        # LOCAIS_EXCESSO_PADRAO acima (não duplicado aqui).
+        "departamento_excluido": "ALMOXARIFADO",
+        "locais_kpi_custo": list(LOCAIS_EXCESSO_KPI_CUSTO),
+        "locais_padrao": list(LOCAIS_EXCESSO_PADRAO),
+        "dias_selecionado_padrao": "60",
+    },
+    "indisponivel": {
+        # Locais que definem "produto indisponível pra venda", agrupados
+        # nas 4 categorias que viram as 4 KPIs da tela. Valores abaixo são
+        # os confirmados direto no banco a partir do que o usuário mandou
+        # (27/08/2026) — "devolucao" ficou só com 1 local porque os outros
+        # 4 que foram mencionados não bateram com nenhum nome real; dá pra
+        # completar direto na tela de Configurações escolhendo da lista.
+        "locais_por_categoria": {
+            "assistencia": ["ASSIST TECNICA LJ P. DUTRA", "ASSIT TEC AUTZDA [01]", "ASSIT TEC DP [01]"],
+            "almoxarifado": ["ALMOXARIFADO [01]", "ALMOXARIFADO [06]", "ALMOXARIFADO [07]"],
+            "devolucao": ["DEVOLUÇÃO [06]"],
+            "emprestimo": ["EMPRÉSTIMO", "EMPRESTIMO [01]", "EMPRESTIMO [06]", "EMPRESTIMO P. DUTRA"],
+        },
+    },
+    "visibilidade": {
+        # Sub-abas de Estoque escondidas do MENU AO VIVO (a tela real que o
+        # usuário final usa) — não apaga nada, só tira da navegação e do
+        # roteamento enquanto estiver na lista. Toda a lógica/dado por trás
+        # continua intacto (inclusive esta própria config em Configurações),
+        # só a aba some do menu de Estoque. Vazio = tudo visível (padrão de
+        # fábrica). "ruptura" nunca pode entrar aqui — ver
+        # `validate_visibilidade_config`.
+        "estoque_subtabs_ocultas": [],
+    },
 }
 
 
@@ -151,6 +287,8 @@ def validate_periodo(periodo_cfg):
 
 def validate_ruptura_config(cfg):
     validate_periodo(cfg["vendas_periodo"])
+    validate_periodo(cfg["entrada_periodo"])
+    validate_periodo(cfg["pedido_periodo"])
     if not cfg.get("situacao_entrada"):
         raise ValueError("situacao_entrada não pode ser vazio")
     if not cfg.get("operacao_entrada"):
@@ -161,3 +299,88 @@ def validate_ruptura_config(cfg):
         raise ValueError("permitevenda deve ser 'A' ou 'I'")
     if cfg.get("pro_status") not in ("A", "I"):
         raise ValueError("pro_status deve ser 'A' ou 'I'")
+
+    situacoes = cfg.get("situacoes_pedido_pendente")
+    if not isinstance(situacoes, list) or not situacoes:
+        raise ValueError("situacoes_pedido_pendente precisa ter pelo menos 1 situação")
+    if not set(situacoes) <= SITUACOES_PEDIDO_VALIDAS:
+        raise ValueError(f"situacoes_pedido_pendente só aceita valores de {sorted(SITUACOES_PEDIDO_VALIDAS)}")
+
+    if not isinstance(cfg.get("aglutinar_ligado_por_padrao"), bool):
+        raise ValueError("aglutinar_ligado_por_padrao deve ser verdadeiro/falso")
+    palavras = cfg.get("aglutinar_prefixo_palavras")
+    if not isinstance(palavras, int) or not (1 <= palavras <= 6):
+        raise ValueError("aglutinar_prefixo_palavras deve ser um inteiro entre 1 e 6")
+
+    excecoes = cfg.get("aglutinar_prefixo_excecoes")
+    if not isinstance(excecoes, list):
+        raise ValueError("aglutinar_prefixo_excecoes precisa ser uma lista")
+    for exc in excecoes:
+        if not isinstance(exc, dict) or exc.get("nivel") not in ("departamento", "grupo", "subgrupo"):
+            raise ValueError("cada exceção precisa de 'nivel' departamento/grupo/subgrupo")
+        valores = exc.get("valores")
+        if not isinstance(valores, list) or not valores or not all(valores):
+            raise ValueError("cada exceção precisa de pelo menos 1 valor em 'valores' (múltipla escolha)")
+        exc_palavras = exc.get("palavras")
+        if not isinstance(exc_palavras, int) or not (1 <= exc_palavras <= 6):
+            raise ValueError("'palavras' da exceção deve ser um inteiro entre 1 e 6")
+
+    if cfg.get("tela_dias_padrao") not in DIAS_TELA_VALIDOS:
+        raise ValueError(f"tela_dias_padrao deve ser um de {sorted(DIAS_TELA_VALIDOS)}")
+    if not cfg.get("tela_filial_padrao"):
+        raise ValueError("tela_filial_padrao não pode ser vazio")
+
+    riscos = cfg.get("tela_riscos_padrao")
+    if not isinstance(riscos, list) or not riscos:
+        raise ValueError("tela_riscos_padrao precisa ter pelo menos 1 classificação")
+    if not set(riscos) <= RISCOS_VALIDOS:
+        raise ValueError(f"tela_riscos_padrao só aceita valores de {sorted(RISCOS_VALIDOS)}")
+
+    truncar = cfg.get("grafico_truncar_rotulo")
+    if not isinstance(truncar, int) or not (1 <= truncar <= 40):
+        raise ValueError("grafico_truncar_rotulo deve ser um inteiro entre 1 e 40")
+
+    if cfg.get("export_separador_csv") not in SEPARADORES_CSV_VALIDOS:
+        raise ValueError(f"export_separador_csv deve ser um de {sorted(SEPARADORES_CSV_VALIDOS)}")
+
+    colunas = cfg.get("export_colunas")
+    if not isinstance(colunas, list) or not colunas:
+        raise ValueError("export_colunas precisa ter pelo menos 1 coluna")
+    if not set(colunas) <= COLUNAS_EXPORT_VALIDAS:
+        raise ValueError(f"export_colunas só aceita valores de {sorted(COLUNAS_EXPORT_VALIDAS)}")
+
+
+def validate_excesso_config(cfg):
+    if not cfg.get("departamento_excluido"):
+        raise ValueError("departamento_excluido não pode ser vazio")
+    for campo in ("locais_kpi_custo", "locais_padrao"):
+        locais = cfg.get(campo)
+        if not isinstance(locais, list) or not locais:
+            raise ValueError(f"{campo} precisa ter pelo menos 1 local")
+        if not set(locais) <= LOCAIS_ESTOQUE_VALIDOS:
+            raise ValueError(f"{campo} só aceita valores existentes em z_dw_006.localestoqueproduto")
+    if cfg.get("dias_selecionado_padrao") not in DIAS_EXCESSO_VALIDOS:
+        raise ValueError(f"dias_selecionado_padrao deve ser um de {sorted(DIAS_EXCESSO_VALIDOS)}")
+
+
+def validate_indisponivel_config(cfg):
+    categorias = cfg.get("locais_por_categoria")
+    if not isinstance(categorias, dict):
+        raise ValueError("locais_por_categoria precisa ser um objeto com uma lista por categoria")
+    if set(categorias.keys()) != CATEGORIAS_INDISPONIVEL_VALIDAS:
+        raise ValueError(f"locais_por_categoria precisa ter exatamente as categorias {sorted(CATEGORIAS_INDISPONIVEL_VALIDAS)}")
+    for categoria, locais in categorias.items():
+        if not isinstance(locais, list):
+            raise ValueError(f"locais da categoria '{categoria}' precisa ser uma lista")
+        if not set(locais) <= LOCAIS_ESTOQUE_VALIDOS:
+            raise ValueError(f"locais da categoria '{categoria}' só aceita valores existentes em z_dw_006.localestoqueproduto")
+
+
+def validate_visibilidade_config(cfg):
+    ocultas = cfg.get("estoque_subtabs_ocultas")
+    if not isinstance(ocultas, list):
+        raise ValueError("estoque_subtabs_ocultas precisa ser uma lista")
+    if not set(ocultas) <= ESTOQUE_SUBTABS_VALIDAS:
+        raise ValueError(f"estoque_subtabs_ocultas só aceita valores de {sorted(ESTOQUE_SUBTABS_VALIDAS)}")
+    if "ruptura" in ocultas:
+        raise ValueError("A sub-aba Ruptura não pode ser ocultada")

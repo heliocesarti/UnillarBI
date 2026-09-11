@@ -35,9 +35,10 @@ from datetime import date, datetime
 from .db import get_connection
 from .query_config import get_config, resolve_periodo
 
-SEVERITY_ORDER = {"EMERGENCIA": 0, "URGENCIA": 1, "ALTA": 2, "MEDIA": 3, "SEM RISCO": 4}
+SEVERITY_ORDER = {"RUPTURA": 0, "EMERGENCIA": 1, "URGENCIA": 2, "ALTA": 3, "MEDIA": 4, "SEM RISCO": 5}
 
 STATUS_LABELS = {
+    "RUPTURA": "Ruptura",
     "EMERGENCIA": "Emergência",
     "URGENCIA": "Urgência",
     "ALTA": "Alta",
@@ -45,6 +46,7 @@ STATUS_LABELS = {
     "SEM RISCO": "Sem risco",
 }
 RISCO_KEYS = {
+    "RUPTURA": "ruptura",
     "EMERGENCIA": "emergencia",
     "URGENCIA": "urgencia",
     "ALTA": "alta",
@@ -86,6 +88,13 @@ def _classify(estoque, vendas, entradas, pedidos, dias_pedido, dias_entrada, pro
     quem chama — ver compute_dynamic()."""
     if estoque >= vendas and projecao <= 0:
         return "SEM RISCO"
+    # Ajuste 10/09/2026 (pedido do usuário): estoque zerado é sempre um
+    # nível à parte ("Ruptura", o mais crítico de todos, acima de
+    # Emergência) — mesmo com pedido/entrada a caminho, pra chamar mais
+    # atenção do operador. Urgência/Alta/Média/Emergência só valem com 1
+    # unidade ou mais em estoque.
+    if estoque <= 0:
+        return "RUPTURA"
     if (estoque < vendas or projecao > 0) and entradas == 0 and pedidos == 0:
         return "EMERGENCIA"
     if projecao > 0 and dias_pedido > LIMITE_ATRASO_PEDIDO and entradas == 0:
@@ -110,8 +119,6 @@ def _avaliar(estoque, vendas, entradas, pedidos, dias_pedido, dias_entrada):
 
 def compute_base():
     """Carrega tudo (Resumos In-Memory) em paralelo para economizar tempo."""
-    from concurrent.futures import ThreadPoolExecutor
-
     cfg = get_config("ruptura")
     data_ini_vendas, data_fim_vendas = resolve_periodo(cfg["vendas_periodo"])
     data_ini_entrada, data_fim_entrada = resolve_periodo(cfg["entrada_periodo"])
@@ -175,10 +182,13 @@ def compute_base():
         # Medida Entradas_Pendentes: quantidade só das notas emitidas
         # dentro da janela `entrada_periodo` (config — regra original do
         # usuário, restaurada em 28/08/2026, corte em `data_emissao`) +
-        # menor `data_entrada` só entre 2024 em diante (pra
-        # Dias_Atraso_Entrada — guarda independente, campo de data diferente).
+        # menor `data_emissao` (não `data_entrada`) das chaves com saldo
+        # pendente, só entre 2024 em diante, pra Dias_Atraso_Entrada
+        # (corrigido em 03/09/2026 — usuário identificou com dado real,
+        # produto 31652, que o atraso deve contar da emissão da chave mais
+        # antiga ainda pendente, não da data prevista/realizada de entrada).
         rows = _fetch_rows(
-            "SELECT i.codigo_produto, SUM(i.quantidade), MIN(CASE WHEN c.data_entrada >= %s THEN c.data_entrada END) "
+            "SELECT i.codigo_produto, SUM(i.quantidade), MIN(CASE WHEN c.data_emissao >= %s THEN c.data_emissao END) "
             "FROM z_dw_026_itens i "
             "JOIN z_dw_026_capas c ON c.chave_entrada = i.chave_entrada AND c.filial_entrada = i.filial_entrada "
             "WHERE c.situacao = %s AND c.operacao_entrada = %s "
@@ -199,12 +209,17 @@ def compute_base():
         # `pedido_periodo` (config, corte em `data_emissao` — mesmo
         # princípio da Entrada acima), baseado em situacao_item do
         # próprio item (lista configurável pela tela, ver
-        # `situacoes_pedido_pendente`); menor data_previsao só depois de
-        # 2015 (pra Dias_Atraso_Pedido — guarda independente). Guarda
-        # extra "quantidade_itens > quantidade_entregue" evita linha com
-        # saldo zerado/negativo por inconsistência de status entrar na soma.
+        # `situacoes_pedido_pendente`); menor `data_emissao` (não
+        # `data_previsao`) das chaves com saldo pendente, só depois de 2015,
+        # pra Dias_Atraso_Pedido (corrigido em 03/09/2026 — usuário
+        # identificou com dado real, produto 31652, que o pedido conta
+        # atraso desde a emissão, já que sem pedido não tem entrega, e
+        # `data_previsao` é só uma expectativa que pode nem ter vencido
+        # ainda). Guarda extra "quantidade_itens > quantidade_entregue"
+        # evita linha com saldo zerado/negativo por inconsistência de
+        # status entrar na soma.
         rows = _fetch_rows(
-            "SELECT i.codigo_produto, SUM(i.quantidade_itens - i.quantidade_entregue), MIN(CASE WHEN c.data_previsao > %s THEN c.data_previsao END) "
+            "SELECT i.codigo_produto, SUM(i.quantidade_itens - i.quantidade_entregue), MIN(CASE WHEN c.data_emissao > %s THEN c.data_emissao END) "
             "FROM z_dw_029_itens i "
             "JOIN z_dw_029_capas c ON c.chave_pedido = i.chave_pedido AND c.filial_pedido = i.filial_pedido "
             "WHERE i.situacao_item = ANY(%s) AND i.quantidade_itens > i.quantidade_entregue "
@@ -297,7 +312,25 @@ def compute_dynamic(base, dias, filial=None):
     locais_db = base.get("locais_db", {})
 
     filtro_filial = None if (not filial or filial == "todas") else str(int(filial))
-    aglutinar_n_palavras = get_config("ruptura").get("aglutinar_prefixo_palavras", 3)
+    cfg_ruptura = get_config("ruptura")
+    aglutinar_n_palavras = cfg_ruptura.get("aglutinar_prefixo_palavras", 3)
+
+    # Exceções ao nº de palavras global, por Departamento/Grupo/Subgrupo —
+    # cada exceção pode marcar mais de um valor (múltipla escolha); o
+    # nível mais específico vence (subgrupo > grupo > departamento).
+    _excecoes = cfg_ruptura.get("aglutinar_prefixo_excecoes", [])
+    _exc_subgrupo = {v: e["palavras"] for e in _excecoes if e.get("nivel") == "subgrupo" for v in e.get("valores", [])}
+    _exc_grupo = {v: e["palavras"] for e in _excecoes if e.get("nivel") == "grupo" for v in e.get("valores", [])}
+    _exc_departamento = {v: e["palavras"] for e in _excecoes if e.get("nivel") == "departamento" for v in e.get("valores", [])}
+
+    def _n_palavras_para(departamento, grupo, subgrupo):
+        if subgrupo in _exc_subgrupo:
+            return _exc_subgrupo[subgrupo]
+        if grupo in _exc_grupo:
+            return _exc_grupo[grupo]
+        if departamento in _exc_departamento:
+            return _exc_departamento[departamento]
+        return aglutinar_n_palavras
 
     def _vendas_no_periodo(cod):
         total = 0.0
@@ -306,13 +339,15 @@ def compute_dynamic(base, dias, filial=None):
                 total += venda["qtd"]
         return total
 
-    def _prefixo3(desc):
+    def _prefixo3(desc, departamento=None, grupo=None, subgrupo=None):
         # "TIJOLO 8 FUROS IMPERIAL" -> "TIJOLO 8 FUROS" (com N=3, o padrão)
         # — usado pra detectar quando vários produtos são o MESMO item em
         # marcas/variações diferentes (não é o critério de "mesmo grupo",
-        # que é mais largo). N de palavras vem de `aglutinar_prefixo_palavras`.
+        # que é mais largo). N de palavras vem de `aglutinar_prefixo_palavras`,
+        # com exceção por Departamento/Grupo/Subgrupo quando configurado.
+        n = _n_palavras_para(departamento, grupo, subgrupo)
         palavras = (desc or "").split()
-        return " ".join(palavras[:aglutinar_n_palavras]).strip()
+        return " ".join(palavras[:n]).strip()
 
     # Info bruta de UM produto ativo — não decide risco nem filtra por
     # venda>0 (isso é feito por quem chama). Reusada tanto pra montar a
@@ -425,7 +460,12 @@ def compute_dynamic(base, dias, filial=None):
     produtos_por_familia = defaultdict(list)
     for p in produtos_list:
         cadastro = produtos_cadastro.get(p["cod"], {})
-        prefixo = _prefixo3(cadastro.get("desc", ""))
+        prefixo = _prefixo3(
+            cadastro.get("desc", ""),
+            cadastro.get("departamento", "SEM DEPARTAMENTO"),
+            cadastro.get("grupo", "SEM GRUPO"),
+            cadastro.get("subgrupo", "SEM SUBGRUPO"),
+        )
         if prefixo:
             produtos_por_familia[(cadastro.get("grupo", "SEM GRUPO"), prefixo)].append(p["cod"])
 
@@ -440,7 +480,7 @@ def compute_dynamic(base, dias, filial=None):
     # todo produto vendido aparece na Aglutinação — agrupado quando tem
     # família com mais de 1 membro ativo, sozinho quando não tem.
     for p in produtos_list:
-        prefixo_p = _prefixo3(p["desc"])
+        prefixo_p = _prefixo3(p["desc"], p["departamento"], p["grupo"], p["subgrupo"])
         chave = (p["grupo"], prefixo_p) if prefixo_p else None
         membros_da_chave = produtos_por_familia.get(chave, []) if chave else []
         if chave and len(membros_da_chave) > 1:

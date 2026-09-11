@@ -1,129 +1,107 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import EmptyState from '../../components/EmptyState';
+import ConfigNav from './ConfigNav';
+import RupturaConfigPanel from './paineis/RupturaConfigPanel';
+import IndisponivelConfigPanel from './paineis/IndisponivelConfigPanel';
+import VisibilidadeConfigPanel from './paineis/VisibilidadeConfigPanel';
+import DocumentacaoPanel from './paineis/DocumentacaoPanel';
+import AparenciaConfigPanel from './paineis/AparenciaConfigPanel';
+import TelaInicialConfigPanel from './paineis/TelaInicialConfigPanel';
+
+// Cada módulo "disponivel" no registro do backend precisa de uma entrada
+// aqui apontando pro componente que renderiza os parâmetros dele. Um
+// módulo sem entrada nesse mapa cai automaticamente no estado "pendente",
+// mesmo que o backend já marque ele como disponível — evita tela em branco
+// se alguém esquecer de conectar o painel novo.
+const PAINEIS = {
+  'estoque:ruptura': RupturaConfigPanel,
+  'estoque:indisponivel': IndisponivelConfigPanel,
+  'estoque:visibilidade': VisibilidadeConfigPanel,
+  'documentacao:resumo': DocumentacaoPanel,
+  'preferencias:aparencia': AparenciaConfigPanel,
+  'preferencias:tela_inicial': TelaInicialConfigPanel,
+};
 
 export default function Configuracoes() {
-  const [cfg, setCfg] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [registry, setRegistry] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+  const [selected, setSelected] = useState(null);
 
+  // Nada pré-selecionado ao abrir — nav toda recolhida, pra quem chegar
+  // ter uma visão geral de onde pode ir antes de escolher, em vez de já
+  // cair direto dentro de um módulo específico (era Estoque > Ruptura por
+  // padrão antes).
   useEffect(() => {
-    api.getConfig()
-      .then(all => {
-        setCfg(all.ruptura);
-        setLoading(false);
-      })
-      .catch(e => {
-        setLoadError(e.message);
-        setLoading(false);
-      });
+    api.getConfigRegistry()
+      .then(setRegistry)
+      .catch(e => setLoadError(e.message));
   }, []);
-
-  function update(patch) {
-    setCfg(prev => ({ ...prev, ...patch }));
-  }
-
-  async function handleSalvar(atualizarDepois) {
-    setSaving(true);
-    setFeedback(null);
-    try {
-      const salvo = await api.updateRupturaConfig(cfg);
-      setCfg(salvo);
-      if (atualizarDepois) {
-        await api.atualizarEstoqueRuptura();
-        setFeedback('Configuração salva. Atualização de dados iniciada — acompanhe na tela Ruptura.');
-      } else {
-        setFeedback('Configuração salva. Vale a partir da próxima vez que clicar em "Atualizar dados" na Ruptura.');
-      }
-    } catch (e) {
-      setFeedback(`Erro ao salvar: ${e.message}`);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleRestaurar() {
-    setSaving(true);
-    setFeedback(null);
-    try {
-      const padrao = await api.resetRupturaConfig();
-      setCfg(padrao);
-      setFeedback('Restaurado para o padrão (igual à regra original do Power BI).');
-    } catch (e) {
-      setFeedback(`Erro ao restaurar: ${e.message}`);
-    } finally {
-      setSaving(false);
-    }
-  }
 
   if (loadError) {
     return (
       <div className="view-fade">
         <div className="empty-state">
-          <h3>Não foi possível carregar a configuração</h3>
+          <h3>Não foi possível carregar as configurações</h3>
           <p>{loadError}</p>
         </div>
       </div>
     );
   }
 
-  if (loading || !cfg) {
-    return <div className="view-fade"><div className="empty-state"><h3>Carregando configuração...</h3></div></div>;
+  if (!registry) {
+    return <div className="view-fade"><div className="empty-state"><h3>Carregando configurações...</h3></div></div>;
   }
+
+  const Painel = selected ? PAINEIS[`${selected.ambiente}:${selected.modulo}`] : null;
+
+  // Ambiente com um único módulo não precisa repetir o próprio nome no
+  // breadcrumb ("Visão Geral / Parâmetros gerais" vira só "Parâmetros
+  // gerais") — só ambientes com vários módulos (Estoque) mostram os 2 níveis.
+  const ambienteAtual = selected ? registry.find(a => a.key === selected.ambiente) : null;
+  const mostrarAmbiente = (ambienteAtual?.modulos.length ?? 0) > 1;
 
   return (
     <div className="view-fade">
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="card-title">Ruptura — situação e elegibilidade das consultas</div>
-        <div className="card-subtitle">
-          Controla quais registros a atualização de dados considera no banco. Mudanças só valem a
-          partir da próxima vez que clicar em "Atualizar dados" na tela Ruptura. Os limites de
-          atraso e a fórmula de classificação de risco agora seguem exatamente a mesma regra do
-          Power BI e não são mais editáveis por aqui.
-        </div>
-      </div>
+      <div className="config-shell">
+        <ConfigNav ambientes={registry} selected={selected} onSelect={setSelected} />
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="card-title" style={{ marginBottom: 14 }}>Situação</div>
-        <div className="config-grid">
-          <div className="config-field">
-            <label className="config-label">Situação da entrada (nota fiscal)</label>
-            <input className="config-input" value={cfg.situacao_entrada} onChange={(e) => update({ situacao_entrada: e.target.value })} />
+        <div className="config-content">
+          {/* Dentro de .config-content (a mesma coluna dos painéis/abas) —
+              antes ficava acima de .config-shell, largura cheia da página,
+              e desalinhava com as abas do painel (que começam depois da
+              coluna do ConfigNav). Agora os dois começam no mesmo x. */}
+          <div className="config-breadcrumb">
+            {selected ? (
+              <>
+                {mostrarAmbiente && (
+                  <>
+                    <span>{selected.ambienteLabel}</span>
+                    <span className="config-breadcrumb-sep">/</span>
+                  </>
+                )}
+                <span>{selected.label}</span>
+              </>
+            ) : (
+              <span>Configurações</span>
+            )}
           </div>
-          <div className="config-field">
-            <label className="config-label">Operação de entrada</label>
-            <input className="config-input" value={cfg.operacao_entrada} onChange={(e) => update({ operacao_entrada: e.target.value })} />
-          </div>
-          <div className="config-field">
-            <label className="config-label">Produto permite compra</label>
-            <select className="config-input" value={cfg.permitecompra} onChange={(e) => update({ permitecompra: e.target.value })}>
-              <option value="A">Ativo (A)</option>
-              <option value="I">Inativo (I)</option>
-            </select>
-          </div>
-          <div className="config-field">
-            <label className="config-label">Produto permite venda</label>
-            <select className="config-input" value={cfg.permitevenda} onChange={(e) => update({ permitevenda: e.target.value })}>
-              <option value="A">Ativo (A)</option>
-              <option value="I">Inativo (I)</option>
-            </select>
-          </div>
-          <div className="config-field">
-            <label className="config-label">Status do cadastro (pro_status)</label>
-            <select className="config-input" value={cfg.pro_status} onChange={(e) => update({ pro_status: e.target.value })}>
-              <option value="A">Ativo (A)</option>
-              <option value="I">Inativo (I)</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      <div className="config-actions">
-        <button className="icon-btn" disabled={saving} onClick={() => handleSalvar(false)}>Salvar</button>
-        <button className="icon-btn primary" disabled={saving} onClick={() => handleSalvar(true)}>Salvar e atualizar agora</button>
-        <button className="icon-btn" disabled={saving} onClick={handleRestaurar}>Restaurar padrão</button>
-        {feedback && <span className="config-feedback">{feedback}</span>}
+          {!selected && (
+            <EmptyState
+              title="Escolha uma área ao lado"
+              message="Clique num ambiente na barra lateral pra abrir a lista de módulos e ver os parâmetros disponíveis."
+            />
+          )}
+          {selected && (Painel ? (
+            <Painel />
+          ) : (
+            <EmptyState
+              title={`${selected.label} — parâmetros pendentes`}
+              message="Ainda não há parâmetros configuráveis para este ambiente. Assim que as regras de negócio forem definidas com o time, esta área é liberada aqui — sem precisar mexer em código."
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
