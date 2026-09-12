@@ -105,7 +105,10 @@ export default function App() {
               {activeView === 'configuracoes' && <Configuracoes />}
             </div>
             <div className="page-footer">
-              <span>Unillar BI © 2026</span>
+              <span>
+                Unillar BI © 2026
+                <span className="footer-dev"> · Desenvolvido por Hélio Cesar</span>
+              </span>
               <Clock />
             </div>
           </main>
@@ -121,5 +124,10 @@ function Clock() {
     const id = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(id);
   }, []);
-  return <span>Atualizado às {now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>;
+  return (
+    <span>
+      Atualizado às {now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+      <span className="footer-dev"> · v1.0</span>
+    </span>
+  );
 }

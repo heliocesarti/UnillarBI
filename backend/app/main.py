@@ -1,6 +1,8 @@
 import logging
+import os
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from . import error_reporting
@@ -12,6 +14,15 @@ setup_logging()
 logger = logging.getLogger("unillarbi.main")
 
 app = FastAPI(title="Unillar BI API")
+
+cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_methods=["GET", "POST", "PUT"],
+        allow_headers=["Content-Type"],
+    )
 
 app.include_router(visao_geral.router)
 app.include_router(vendas.router)

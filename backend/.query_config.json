@@ -92,6 +92,13 @@
           "CAPACETES"
         ],
         "palavras": 2
+      },
+      {
+        "nivel": "grupo",
+        "valores": [
+          "LIQUIDIFICADOR"
+        ],
+        "palavras": 2
       }
     ],
     "tela_dias_padrao": "60",

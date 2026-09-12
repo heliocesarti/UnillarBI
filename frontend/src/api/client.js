@@ -1,17 +1,19 @@
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 async function getJson(path) {
-  const res = await fetch(path);
+  const res = await fetch(API_BASE + path);
   if (!res.ok) throw new Error(`Falha ao buscar ${path}: ${res.status}`);
   return res.json();
 }
 
 async function postJson(path) {
-  const res = await fetch(path, { method: 'POST' });
+  const res = await fetch(API_BASE + path, { method: 'POST' });
   if (!res.ok) throw new Error(`Falha ao chamar ${path}: ${res.status}`);
   return res.json();
 }
 
 async function putJson(path, body) {
-  const res = await fetch(path, {
+  const res = await fetch(API_BASE + path, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

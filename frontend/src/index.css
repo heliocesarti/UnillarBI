@@ -312,7 +312,7 @@ a, button{ font-family:inherit; }
 .brand img{ width:34px; height:auto; flex:none; filter: drop-shadow(0 0 10px rgba(255,0,0,0.35)); }
 .brand-word{ display:flex; flex-direction:column; line-height:1.15; }
 .brand-word b{ font-size:16px; font-weight:700; letter-spacing:0.2px; color:#F5F7FB; }
-.brand-word span{ font-size:11px; color:#AAB8D6; letter-spacing:0.6px; text-transform:uppercase; }
+.brand-word span{ font-size:11px; color:#AAB8D6; letter-spacing:0.6px; }
 
 nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .nav-item{
@@ -1044,6 +1044,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 
 /* ---------- footer ---------- */
 .page-footer{ margin-top:30px; padding-top:18px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; font-size:11px; color:var(--text-muted); }
+.footer-dev{ letter-spacing:0.2px; }
 
 @media (max-width: 1180px){
   .kpi-grid{ grid-template-columns:repeat(2,1fr); }
