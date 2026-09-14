@@ -463,13 +463,11 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
     return sortedProdutos.filter(p => selectedProdutos.has(p.rowId));
   }, [sortedProdutos, selectedProdutos]);
 
-  // Exporta exatamente as linhas visíveis na tabela (mesmos filtros,
-  // ordenação e isolação aplicados) pra um .csv que o Excel abre direto —
-  // separador e colunas vêm de Configurações > Estoque > Ruptura >
-  // Exportação (padrão: ';' e as 14 colunas, igual ao comportamento de
-  // sempre) — BOM UTF-8 pra acentuação certa em qualquer separador.
-  function handleExportarExcel() {
-    const colDefs = {
+  // Definição das colunas exportáveis, compartilhada entre a tabela
+  // principal e o modal de família do Aglutinar (abaixo) — cada um usa só
+  // o subconjunto de chaves que faz sentido pra sua própria tabela.
+  function getExportColDefs() {
+    return {
       cod: { header: 'Código', get: (p) => p.cod },
       desc: { header: 'Descrição', get: (p) => p.desc },
       marca: { header: 'Marca', get: (p) => p.marca },
@@ -485,12 +483,12 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
       subgrupo: { header: 'Subgrupo', get: (p) => p.subgrupo },
       risco: { header: 'Ruptura', get: (p) => RISCO_MAP[p.risco]?.label ?? p.risco },
     };
-    const colunas = (rupturaCfg?.export_colunas?.length ? rupturaCfg.export_colunas : Object.keys(colDefs))
-      .filter((key) => colDefs[key]);
-    const separador = rupturaCfg?.export_separador_csv || ';';
+  }
 
+  function baixarCsv(colunas, colDefs, linhasFonte, nomeArquivo) {
+    const separador = rupturaCfg?.export_separador_csv || ';';
     const headers = colunas.map((key) => colDefs[key].header);
-    const linhas = rowsToShow.map((p) => colunas.map((key) => colDefs[key].get(p)));
+    const linhas = linhasFonte.map((p) => colunas.map((key) => colDefs[key].get(p)));
     const escapar = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [headers, ...linhas].map(row => row.map(escapar).join(separador)).join('\r\n');
     const bom = String.fromCharCode(0xFEFF);
@@ -498,11 +496,34 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ruptura_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = nomeArquivo;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  // Exporta exatamente as linhas visíveis na tabela (mesmos filtros,
+  // ordenação e isolação aplicados) pra um .csv que o Excel abre direto —
+  // separador e colunas vêm de Configurações > Estoque > Ruptura >
+  // Exportação (padrão: ';' e as 14 colunas, igual ao comportamento de
+  // sempre) — BOM UTF-8 pra acentuação certa em qualquer separador.
+  function handleExportarExcel() {
+    const colDefs = getExportColDefs();
+    const colunas = (rupturaCfg?.export_colunas?.length ? rupturaCfg.export_colunas : Object.keys(colDefs))
+      .filter((key) => colDefs[key]);
+    baixarCsv(colunas, colDefs, rowsToShow, `ruptura_${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
+  // Exporta os produtos da família aberta no modal do Aglutinar — mesmas
+  // colunas que a própria tabela do modal mostra (sem Departamento/Grupo,
+  // que a tabela de família não exibe).
+  function handleExportarFamiliaExcel() {
+    if (!aglutinarModal) return;
+    const colDefs = getExportColDefs();
+    const colunas = ['risco', 'cod', 'desc', 'marca', 'vendas', 'estoque', 'entrada', 'pedidos', 'diasPedidosPend', 'diasPendEntrada', 'projecao', 'subgrupo'];
+    const nomeBase = (aglutinarModal.desc || 'familia').toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 40);
+    baixarCsv(colunas, colDefs, aglutinarModal.itens ?? [], `${nomeBase}_${new Date().toISOString().slice(0, 10)}.csv`);
   }
 
   if (state.status === 'idle') {
@@ -729,10 +750,16 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
                 <div className="card-title table-title">{aglutinarModal.desc}</div>
                 <div className="card-subtitle">Produtos que compõem essa família</div>
               </div>
-              <button className="icon-btn" onClick={() => setAglutinarModal(null)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
-                Fechar
-              </button>
+              <div className="card-actions">
+                <button className="icon-btn" onClick={handleExportarFamiliaExcel} title="Exporta os produtos desta família em .csv">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>
+                  Exportar Excel
+                </button>
+                <button className="icon-btn" onClick={() => setAglutinarModal(null)}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                  Fechar
+                </button>
+              </div>
             </div>
             <div className="table-scroll" style={{ overflowX: 'auto' }}>
               <table className="data-table visible rup-table-compact">
