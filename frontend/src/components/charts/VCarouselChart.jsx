@@ -1,12 +1,37 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { theme } from '../../theme';
 import { roundedBarPath } from '../../utils/svgPaths';
 import { useTooltip } from '../../utils/TooltipContext';
+
+// Celular em pé: a largura real disponível pro cartão fica bem menor que a
+// dos cartões de desktop (que o gráfico foi desenhado pra preencher — 400
+// unidades de largura no viewBox). Como o SVG escala tudo proporcionalmente
+// (`width:100%`), renderizar as mesmas 400 unidades num cartão estreito
+// encolhe o texto junto (uma fonte "11" vira uns 7px reais) — ilegível.
+// Reduzindo o viewBox (W/H) só nesse caso, a MESMA largura em pixels reais
+// passa a valer mais "zoom" (escala > 1), sem tocar em nada no desktop nem
+// no celular deitado (a viewport fica larga o bastante pra sair da consulta
+// abaixo em qualquer aparelho real).
+const MOBILE_PORTRAIT_QUERY = '(max-width: 640px) and (orientation: portrait)';
+
+function useMobilePortrait() {
+  const [match, setMatch] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(MOBILE_PORTRAIT_QUERY).matches : false
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(MOBILE_PORTRAIT_QUERY);
+    const handler = (e) => setMatch(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+  return match;
+}
 
 export default function VCarouselChart({ title, subtitle, data, valueFormatter, selectedLabel, onBarClick, truncateAt = 8, height = 220, compress = false }) {
   const { showTooltip, hideTooltip } = useTooltip();
   const [hoverI, setHoverI] = useState(null);
   const [page, setPage] = useState(0);
+  const isMobilePortrait = useMobilePortrait();
 
   const safeData = data || [];
   const ITEMS_PER_PAGE = 5;
@@ -14,7 +39,7 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
   const safePage = Math.min(page, maxPage);
   const visibleData = safeData.slice(safePage * ITEMS_PER_PAGE, (safePage + 1) * ITEMS_PER_PAGE);
 
-  const W = 400, H = height, padL = 20, padR = 20, padT = 28, padB = 40;
+  const W = isMobilePortrait ? 280 : 400, H = isMobilePortrait ? 260 : height, padL = 20, padR = 20, padT = 28, padB = 40;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const n = ITEMS_PER_PAGE;
   const slot = plotW / n;

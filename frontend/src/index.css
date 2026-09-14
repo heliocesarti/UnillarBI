@@ -1116,10 +1116,35 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .card-head{ flex-direction:column; align-items:stretch; }
   .card-actions{ flex-wrap:wrap; }
 
-  .kpi-grid, .kpi-grid-3{ grid-template-columns:1fr; }
+  .kpi-grid{ grid-template-columns:1fr; }
   .indisp-kpi-row{ flex-direction:column; gap:8px; }
 
   .doc-paginador{ gap:8px; }
   .doc-pag-info{ min-width:0; flex:1 1 auto; }
   .doc-pag-titulo{ font-size:13.5px; }
+}
+
+/* Celular em pé (retrato): os 3 KPIs (Ruptura/Excesso) continuam numa
+   linha só — pedido do usuário — só ficam compactos pra caber. Os 3
+   gráficos ficam empilhados (herda a regra de 700px já existente acima),
+   com viewBox reduzido no próprio componente (VCarouselChart.jsx) pra não
+   ficarem com letra minúscula demais mesmo empilhados. */
+@media (max-width: 640px) and (orientation: portrait){
+  .kpi-grid-3{ grid-template-columns:repeat(3,1fr); gap:8px; }
+  .kpi-grid-3 .kpi-card{ padding:10px 8px 8px 8px; }
+  .kpi-grid-3 .kpi-label{ font-size:9.5px; line-height:1.25; }
+  .kpi-grid-3 .kpi-value{ font-size:15px; }
+  .kpi-grid-3 .kpi-value-row{ margin-top:4px; }
+  .ruptura-grid .card{ padding:12px; }
+  .rup-donut-col .chart-wrap svg{ max-width:220px; }
+}
+
+/* Celular deitado (paisagem): volta a se comportar como desktop — os 3
+   gráficos lado a lado, não empilhados. As larguras (1180/1000/700px) já
+   cobrem telas grandes, mas um celular deitado normalmente cai nessa
+   faixa de largura (700 a ~950px) e sem isso ainda ficaria em 1 ou 2
+   colunas — aqui força de volta pro padrão de 3, igual ao desktop. */
+@media (orientation: landscape) and (max-width: 1024px){
+  .ruptura-grid{ grid-template-columns:repeat(3,1fr); }
+  .kpi-grid-3{ grid-template-columns:repeat(3,1fr); }
 }
