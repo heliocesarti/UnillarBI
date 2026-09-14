@@ -572,9 +572,9 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
             </details>
           </div>
 
-          <MultiCheckDropdown label={isMobile ? 'Depto' : 'Departamento'} options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
+          <MultiCheckDropdown label="Departamento" options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
           <MultiCheckDropdown label="Grupo" options={grupoOptions} selected={selectedGrupos} onToggle={(v) => toggleEmSet(setSelectedGrupos, v)} />
-          <MultiCheckDropdown label={isMobile ? 'Subgr' : 'Subgrupo'} options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
+          <MultiCheckDropdown label="Subgrupo" options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
 
           {/* Sincronizar e Limpar filtros agora ficam só no Topbar (ao lado
               da Filial) — disparam a ação da aba de Estoque selecionada. */}

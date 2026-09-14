@@ -1158,22 +1158,25 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 
 /* Linha de filtros da Ruptura (dias/risco/departamento/grupo/subgrupo): em
-   pé E deitado, rótulos já vêm abreviados do JSX ("Últ. 60 dias",
-   "Class. de risco", "Depto", "Subgr") — aqui só encolhe a caixinha (era
-   largura fixa de 148px) pra caber os 5 numa linha só. `flex-wrap`
-   continua ligado (herdado de `.rup-filters-row`) como rede de segurança:
-   se não couber tudo mesmo assim, quebra pra 2ª linha em vez de
+   pé E deitado. Só "Últimos 60 dias" e "Classificação de risco" vêm com
+   texto abreviado do JSX ("Últ. 60 dias"/"Class. de risco" — os 2 rótulos
+   mais compridos); Departamento/Grupo/Subgrupo continuam com o nome
+   completo, sem abreviar (pedido do usuário). Aqui só tira a largura fixa
+   de 148px (cada caixinha usa só o espaço que o próprio texto precisa) —
+   fonte/altura continuam bem próximas do tamanho normal, legível, não
+   uma miniatura. `flex-wrap` (herdado de `.rup-filters-row`) é só rede de
+   segurança: se mesmo assim não couber tudo, quebra pra 2ª linha em vez de
    cortar/estourar a tela. */
 @media (max-width: 640px) and (orientation: portrait), (orientation: landscape) and (max-width: 1024px){
   .rup-filters{ margin-bottom:20px; }
-  .rup-filters-row{ gap:5px; }
+  .rup-filters-row{ gap:6px; }
   .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input{
-    width:auto; min-width:0; height:26px; padding:0 6px; gap:3px; font-size:10px;
+    width:auto; min-width:0; height:28px; padding:0 9px; gap:5px; font-size:11px;
   }
   .rup-filters .date-filter-btn span, .rup-filters .rup-minimal-input span{
     white-space:nowrap; overflow:visible; text-overflow:clip;
   }
-  .rup-filters .date-filter-chevron{ width:9px; height:9px; }
+  .rup-filters .date-filter-chevron{ width:11px; height:11px; }
 }
 
 /* Legenda do donut de risco (bloquinhos com inicial + %): ainda menor nos
