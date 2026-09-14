@@ -1176,16 +1176,18 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 
 /* Em pé especificamente: ainda mais compacto que o bloco acima (5 rótulos
-   numa tela bem mais estreita que o deitado) — usuário confirmou 2x que
-   quer todos numa linha só, mesmo que precise abreviar mais agressivo.
+   numa tela bem mais estreita que o deitado) — usuário confirmou 3x que
+   quer todos numa linha só, mesmo que precise abreviar/encolher mais.
    Rótulos de dias/risco ficam ainda mais curtos aqui ("60 dias"/"Risco",
-   ver Ruptura.jsx) e a caixinha encolhe mais (fonte/padding/gap menores). */
+   ver Ruptura.jsx), a caixinha encolhe mais (fonte/padding/gap menores) e
+   a setinha de cada uma some (a caixinha já é clicável por si só, e cada
+   ícone a menos sobra mais espaço pro texto). */
 @media (max-width: 640px) and (orientation: portrait){
-  .rup-filters-row{ gap:4px; }
+  .rup-filters-row{ gap:3px; }
   .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input{
-    height:26px; padding:0 6px; gap:3px; font-size:10px;
+    height:26px; padding:0 5px; gap:0; font-size:10px;
   }
-  .rup-filters .date-filter-chevron{ width:9px; height:9px; }
+  .rup-filters .date-filter-chevron{ display:none; }
 }
 
 /* Legenda do donut de risco (bloquinhos com inicial + %): ainda menor nos
