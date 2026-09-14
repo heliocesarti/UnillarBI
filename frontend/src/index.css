@@ -1117,17 +1117,16 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .doc-pag-titulo{ font-size:13.5px; }
 }
 
-/* Celular em pé (retrato): os 3 KPIs (Ruptura/Excesso) continuam numa
-   linha só — pedido do usuário — só ficam compactos pra caber. Os 3
-   gráficos ficam empilhados (herda a regra de 700px já existente acima),
-   com viewBox reduzido no próprio componente (VCarouselChart.jsx) pra não
+/* Celular em pé (retrato): os 3 KPIs (Itens com risco de ruptura/Pendente
+   Entrada/Pedido Pendente) ficam um embaixo do outro — usuário testou a
+   versão numa linha só (compacta) e preferiu empilhado, fica mais fácil de
+   ler. Cartão volta ao tamanho normal (nada de fonte/padding reduzidos,
+   já que agora cada um tem a largura toda da tela). Os 3 gráficos ficam
+   empilhados também (herda a regra de 700px já existente acima), com
+   viewBox reduzido no próprio componente (VCarouselChart.jsx) pra não
    ficarem com letra minúscula demais mesmo empilhados. */
 @media (max-width: 640px) and (orientation: portrait){
-  .kpi-grid-3{ grid-template-columns:repeat(3,1fr); gap:8px; }
-  .kpi-grid-3 .kpi-card{ padding:10px 8px 8px 8px; }
-  .kpi-grid-3 .kpi-label{ font-size:9.5px; line-height:1.25; }
-  .kpi-grid-3 .kpi-value{ font-size:15px; }
-  .kpi-grid-3 .kpi-value-row{ margin-top:4px; }
+  .kpi-grid-3{ grid-template-columns:1fr; }
   .ruptura-grid .card{ padding:12px; }
   .rup-donut-col .chart-wrap svg{ max-width:220px; }
 }

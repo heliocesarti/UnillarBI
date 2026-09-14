@@ -131,7 +131,7 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
   // essa dimensão, então mudar aqui não deve afetar mais nada.
   const [dateRange, setDateRange] = useState('60');
   const dias = DIAS_MAP[dateRange] ?? 60;
-  const { isMobile } = useMobileLayout();
+  const { portrait, isMobile } = useMobileLayout();
   // Em pé OU deitado: rótulos abreviados pra caber os 5 filtros numa linha
   // só (pedido do usuário) — "Últimos 60 dias" -> "Últ. 60 dias" etc. Só o
   // desktop de verdade continua com o texto completo de sempre.
@@ -572,9 +572,13 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
             </details>
           </div>
 
-          <MultiCheckDropdown label="Departamento" options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
+          {/* Em pé: abrevia TODOS os rótulos que ainda sobrarem (Depto/Subgr)
+              pra caber os 5 filtros numa linha só, pedido do usuário.
+              Deitado fica como já estava — nome completo, tem largura de
+              sobra pros 3 gráficos + KPIs lado a lado. */}
+          <MultiCheckDropdown label={portrait ? 'Depto' : 'Departamento'} options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
           <MultiCheckDropdown label="Grupo" options={grupoOptions} selected={selectedGrupos} onToggle={(v) => toggleEmSet(setSelectedGrupos, v)} />
-          <MultiCheckDropdown label="Subgrupo" options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
+          <MultiCheckDropdown label={portrait ? 'Subgr' : 'Subgrupo'} options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
 
           {/* Sincronizar e Limpar filtros agora ficam só no Topbar (ao lado
               da Filial) — disparam a ação da aba de Estoque selecionada. */}
