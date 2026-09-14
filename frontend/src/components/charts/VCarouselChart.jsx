@@ -26,20 +26,20 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
   // encolhe o texto junto (uma fonte "11" vira uns 7px reais) — ilegível.
   // Reduzindo o viewBox (W/H) só nesse caso, a MESMA largura em pixels reais
   // passa a valer mais "zoom" (escala > 1).
-  // Celular deitado: largura do viewBox continua igual ao desktop (o
-  // cartão já tem uma largura razoável, lado a lado com os outros 2), só a
-  // ALTURA cai — pedido do usuário ("gráficos esticados demais, quero mais
-  // compactos"), sem comprimir o eixo horizontal.
+  // Celular deitado: mesma largura E altura do desktop (`height` = 220,
+  // prop default) — a redução de altura de uma rodada anterior não era o
+  // que deixava "esticado" (isso já foi resolvido pela legenda compacta do
+  // donut), só deixava a barra mais baixa/menos visível à toa.
   const W = portrait ? 280 : 400;
-  const H = portrait ? 260 : landscape ? 200 : height;
+  const H = portrait ? 260 : height;
   const padL = 20, padR = 20, padT = 28, padB = 40;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const n = ITEMS_PER_PAGE;
   const slot = plotW / n;
   // Celular deitado: com só 4 barras (em vez de 5) sobra bastante vão entre
-  // elas — barra mais grossa (até 48, era 34 pra todo mundo) deixa mais
-  // visível/fácil de mirar, pedido do usuário.
-  const barW = Math.min(landscape ? 48 : 34, slot * 0.6);
+  // elas — barra bem mais grossa (até 60, era 34 pra todo mundo) deixa
+  // muito mais visível/fácil de mirar, pedido do usuário.
+  const barW = Math.min(landscape ? 60 : 34, slot * 0.6);
 
   // Escala fixa pelo maior valor de TODO o conjunto (não só da página visível),
   // senão cada página reescala pro seu próprio topo e a sequência decrescente

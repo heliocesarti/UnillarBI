@@ -1137,23 +1137,6 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .kpi-grid-3 .kpi-value-row{ margin-top:4px; }
   .ruptura-grid .card{ padding:12px; }
   .rup-donut-col .chart-wrap svg{ max-width:220px; }
-
-  /* Linha de filtros (dias/risco/departamento/grupo/subgrupo): rótulos já
-     vêm abreviados do JSX ("Últ. 60 dias", "Class. de risco", "Depto",
-     "Subgr") — aqui só encolhe a caixinha (era largura fixa de 148px) pra
-     caber os 5 numa linha só. `flex-wrap` continua ligado (herdado de
-     `.rup-filters-row`) como rede de segurança: se um aparelho muito
-     estreito não couber tudo mesmo assim, quebra pra 2ª linha em vez de
-     cortar/estourar a tela. */
-  .rup-filters{ margin-bottom:20px; }
-  .rup-filters-row{ gap:5px; }
-  .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input{
-    width:auto; min-width:0; height:26px; padding:0 6px; gap:3px; font-size:10px;
-  }
-  .rup-filters .date-filter-btn span, .rup-filters .rup-minimal-input span{
-    white-space:nowrap; overflow:visible; text-overflow:clip;
-  }
-  .rup-filters .date-filter-chevron{ width:9px; height:9px; }
 }
 
 /* Celular deitado (paisagem): volta a se comportar como desktop — os 3
@@ -1169,9 +1152,28 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
      explícito do usuário. O que fazia ficar "esticado" antes não era o
      stretch em si, era a legenda do donut quebrando linha e inflando a
      altura de referência — já resolvido com a legenda compacta (só a
-     inicial) e a altura menor do gráfico de barra (H=200 lá no
-     VCarouselChart.jsx) pra esse modo. */
+     inicial), então o gráfico de barra volta a usar a mesma altura do
+     desktop (VCarouselChart.jsx). */
   .ruptura-grid .card{ padding:14px; }
+}
+
+/* Linha de filtros da Ruptura (dias/risco/departamento/grupo/subgrupo): em
+   pé E deitado, rótulos já vêm abreviados do JSX ("Últ. 60 dias",
+   "Class. de risco", "Depto", "Subgr") — aqui só encolhe a caixinha (era
+   largura fixa de 148px) pra caber os 5 numa linha só. `flex-wrap`
+   continua ligado (herdado de `.rup-filters-row`) como rede de segurança:
+   se não couber tudo mesmo assim, quebra pra 2ª linha em vez de
+   cortar/estourar a tela. */
+@media (max-width: 640px) and (orientation: portrait), (orientation: landscape) and (max-width: 1024px){
+  .rup-filters{ margin-bottom:20px; }
+  .rup-filters-row{ gap:5px; }
+  .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input{
+    width:auto; min-width:0; height:26px; padding:0 6px; gap:3px; font-size:10px;
+  }
+  .rup-filters .date-filter-btn span, .rup-filters .rup-minimal-input span{
+    white-space:nowrap; overflow:visible; text-overflow:clip;
+  }
+  .rup-filters .date-filter-chevron{ width:9px; height:9px; }
 }
 
 /* Legenda do donut de risco (bloquinhos com inicial + %): ainda menor nos

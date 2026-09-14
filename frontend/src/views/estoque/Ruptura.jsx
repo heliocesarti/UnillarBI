@@ -131,11 +131,11 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
   // essa dimensão, então mudar aqui não deve afetar mais nada.
   const [dateRange, setDateRange] = useState('60');
   const dias = DIAS_MAP[dateRange] ?? 60;
-  const { portrait: mobilePortrait, isMobile } = useMobileLayout();
-  // Celular em pé: rótulos abreviados pra caber os 5 filtros numa linha só
-  // (pedido do usuário) — "Últimos 60 dias" -> "Últ. 60 dias" etc. Desktop
-  // e celular deitado continuam com o texto completo de sempre.
-  const rangesDisplay = mobilePortrait
+  const { isMobile } = useMobileLayout();
+  // Em pé OU deitado: rótulos abreviados pra caber os 5 filtros numa linha
+  // só (pedido do usuário) — "Últimos 60 dias" -> "Últ. 60 dias" etc. Só o
+  // desktop de verdade continua com o texto completo de sempre.
+  const rangesDisplay = isMobile
     ? RANGES.map(r => ({ ...r, label: r.label.replace('Últimos', 'Últ.') }))
     : RANGES;
 
@@ -548,14 +548,14 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
       <div className="rup-filters">
         <div className="rup-filters-row">
 
-          <FilterDropdown icon={mobilePortrait ? null : CalendarIcon} options={rangesDisplay} selectedKey={dateRange} onSelect={setDateRange} footer="Vale só pra Ruptura — outras abas não têm janela de tempo." />
+          <FilterDropdown icon={isMobile ? null : CalendarIcon} options={rangesDisplay} selectedKey={dateRange} onSelect={setDateRange} footer="Vale só pra Ruptura — outras abas não têm janela de tempo." />
 
           {/* Classificação de risco (Sanfona/Dropdown) */}
           <div className="rup-minimal-field">
             <details className="rup-minimal-dropdown" ref={riscoDetailsRef}>
               <summary className="rup-minimal-input" style={{ cursor: 'pointer' }}>
                 <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-primary)' }}>
-                  {mobilePortrait ? 'Class. de risco' : 'Classificação de risco'}
+                  {isMobile ? 'Class. de risco' : 'Classificação de risco'}
                 </span>
                 <svg className="date-filter-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </summary>
@@ -572,9 +572,9 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
             </details>
           </div>
 
-          <MultiCheckDropdown label={mobilePortrait ? 'Depto' : 'Departamento'} options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
+          <MultiCheckDropdown label={isMobile ? 'Depto' : 'Departamento'} options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
           <MultiCheckDropdown label="Grupo" options={grupoOptions} selected={selectedGrupos} onToggle={(v) => toggleEmSet(setSelectedGrupos, v)} />
-          <MultiCheckDropdown label={mobilePortrait ? 'Subgr' : 'Subgrupo'} options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
+          <MultiCheckDropdown label={isMobile ? 'Subgr' : 'Subgrupo'} options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
 
           {/* Sincronizar e Limpar filtros agora ficam só no Topbar (ao lado
               da Filial) — disparam a ação da aba de Estoque selecionada. */}
