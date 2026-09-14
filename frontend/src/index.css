@@ -1169,7 +1169,18 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
      explícito do usuário. O que fazia ficar "esticado" antes não era o
      stretch em si, era a legenda do donut quebrando linha e inflando a
      altura de referência — já resolvido com a legenda compacta (só a
-     inicial) e a altura menor do gráfico de barra (H=180 lá no
+     inicial) e a altura menor do gráfico de barra (H=200 lá no
      VCarouselChart.jsx) pra esse modo. */
   .ruptura-grid .card{ padding:14px; }
+}
+
+/* Legenda do donut de risco (bloquinhos com inicial + %): ainda menor nos
+   2 modos mobile — sobra mais espaço pro círculo do donut em si e deixa o
+   conjunto mais limpo. Só no donut da Ruptura (`.rup-donut-col`), não afeta
+   legendas de outros gráficos que usam a mesma classe genérica `.legend`. */
+@media (max-width: 640px) and (orientation: portrait), (orientation: landscape) and (max-width: 1024px){
+  .rup-donut-col .legend{ gap:5px 8px; margin-top:6px; justify-content:center; }
+  .rup-donut-col .legend-item{ font-size:9px; gap:3px; }
+  .rup-donut-col .legend-swatch{ width:7px; height:7px; }
+  .rup-donut-col .legend-val{ font-size:9px; }
 }

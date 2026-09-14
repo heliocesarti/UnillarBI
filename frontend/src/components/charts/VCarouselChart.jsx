@@ -31,12 +31,15 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
   // ALTURA cai — pedido do usuário ("gráficos esticados demais, quero mais
   // compactos"), sem comprimir o eixo horizontal.
   const W = portrait ? 280 : 400;
-  const H = portrait ? 260 : landscape ? 180 : height;
+  const H = portrait ? 260 : landscape ? 200 : height;
   const padL = 20, padR = 20, padT = 28, padB = 40;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const n = ITEMS_PER_PAGE;
   const slot = plotW / n;
-  const barW = Math.min(34, slot * 0.6);
+  // Celular deitado: com só 4 barras (em vez de 5) sobra bastante vão entre
+  // elas — barra mais grossa (até 48, era 34 pra todo mundo) deixa mais
+  // visível/fácil de mirar, pedido do usuário.
+  const barW = Math.min(landscape ? 48 : 34, slot * 0.6);
 
   // Escala fixa pelo maior valor de TODO o conjunto (não só da página visível),
   // senão cada página reescala pro seu próprio topo e a sequência decrescente
