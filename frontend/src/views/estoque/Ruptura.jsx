@@ -132,12 +132,14 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
   const [dateRange, setDateRange] = useState('60');
   const dias = DIAS_MAP[dateRange] ?? 60;
   const { portrait, isMobile } = useMobileLayout();
-  // Em pé OU deitado: rótulos abreviados pra caber os 5 filtros numa linha
-  // só (pedido do usuário) — "Últimos 60 dias" -> "Últ. 60 dias" etc. Só o
-  // desktop de verdade continua com o texto completo de sempre.
-  const rangesDisplay = isMobile
-    ? RANGES.map(r => ({ ...r, label: r.label.replace('Últimos', 'Últ.') }))
-    : RANGES;
+  // Em pé (linha bem mais estreita, 5 filtros precisam caber): rótulo bem
+  // curto, "60 dias" sem prefixo. Deitado (mais espaço) mantém "Últ. 60
+  // dias". Desktop continua com o texto completo de sempre.
+  const rangesDisplay = portrait
+    ? RANGES.map(r => ({ ...r, label: r.label.replace('Últimos ', '') }))
+    : isMobile
+      ? RANGES.map(r => ({ ...r, label: r.label.replace('Últimos', 'Últ.') }))
+      : RANGES;
 
   const [state, setState] = useState({ status: 'idle', data: null, updatedAt: null, error: null });
   const [fastLoading, setFastLoading] = useState(false);
@@ -555,7 +557,7 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
             <details className="rup-minimal-dropdown" ref={riscoDetailsRef}>
               <summary className="rup-minimal-input" style={{ cursor: 'pointer' }}>
                 <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-primary)' }}>
-                  {isMobile ? 'Class. de risco' : 'Classificação de risco'}
+                  {portrait ? 'Risco' : isMobile ? 'Class. de risco' : 'Classificação de risco'}
                 </span>
                 <svg className="date-filter-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </summary>

@@ -1175,6 +1175,19 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .rup-filters .date-filter-chevron{ width:11px; height:11px; }
 }
 
+/* Em pé especificamente: ainda mais compacto que o bloco acima (5 rótulos
+   numa tela bem mais estreita que o deitado) — usuário confirmou 2x que
+   quer todos numa linha só, mesmo que precise abreviar mais agressivo.
+   Rótulos de dias/risco ficam ainda mais curtos aqui ("60 dias"/"Risco",
+   ver Ruptura.jsx) e a caixinha encolhe mais (fonte/padding/gap menores). */
+@media (max-width: 640px) and (orientation: portrait){
+  .rup-filters-row{ gap:4px; }
+  .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input{
+    height:26px; padding:0 6px; gap:3px; font-size:10px;
+  }
+  .rup-filters .date-filter-chevron{ width:9px; height:9px; }
+}
+
 /* Legenda do donut de risco (bloquinhos com inicial + %): ainda menor nos
    2 modos mobile — sobra mais espaço pro círculo do donut em si e deixa o
    conjunto mais limpo. Só no donut da Ruptura (`.rup-donut-col`), não afeta
