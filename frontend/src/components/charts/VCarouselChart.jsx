@@ -101,7 +101,12 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
             // empurrava o fundo da barra pra baixo da linha de base).
             const bh = Math.max(6, baseY - y(d.value));
             const barTop = baseY - bh;
-            const shortLabel = d.label.length > truncateAt + 1 ? d.label.slice(0, truncateAt) + '…' : d.label;
+            // Em pé/deitado: nome abreviado mais curto que o configurado
+            // pro desktop (a coluna aqui é bem mais estreita) — o nome
+            // completo aparece ao tocar na barra (ver onClick abaixo),
+            // pedido do usuário pra não ficar difícil de ler.
+            const effectiveTruncateAt = (portrait || landscape) ? Math.min(truncateAt, 6) : truncateAt;
+            const shortLabel = d.label.length > effectiveTruncateAt + 1 ? d.label.slice(0, effectiveTruncateAt) + '…' : d.label;
 
             // `selectedLabel` aceita tanto uma string única (uso antigo,
             // seleção exclusiva) quanto um Set (múltipla escolha) — quem
@@ -119,7 +124,17 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
                 <text x={cx} y={H - 14} textAnchor="middle" fontSize={labelFontSize} fontWeight={isSelected ? "700" : "400"} fill={isSelected ? theme.textPrimary : theme.textMuted}>{shortLabel}</text>
                 <rect
                   x={padL + slot * i} y={padT} width={slot} height={plotH} fill="transparent" cursor="pointer"
-                  onClick={() => onBarClick && onBarClick(d, i)}
+                  onClick={(e) => {
+                    onBarClick && onBarClick(d, i);
+                    // Celular (sem hover de verdade): tocar na barra também
+                    // mostra o nome completo no tooltip, já que o rótulo
+                    // embaixo dela vem abreviado — some sozinho depois de
+                    // um tempo pra não ficar "preso" na tela.
+                    if (portrait || landscape) {
+                      showTooltip(e.clientX, e.clientY, d.label, [{ color: d.color || theme.series1, name: 'Valor', value: valueFormatter ? valueFormatter(d.value) : d.value }]);
+                      setTimeout(hideTooltip, 2500);
+                    }
+                  }}
                   onPointerMove={(e) => { setHoverI(i); showTooltip(e.clientX, e.clientY, d.label, [{ color: d.color || theme.series1, name: 'Valor', value: valueFormatter ? valueFormatter(d.value) : d.value }]); }}
                   onPointerLeave={() => { setHoverI(null); hideTooltip(); }}
                 />
