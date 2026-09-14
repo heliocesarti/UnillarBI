@@ -192,6 +192,12 @@
 
 *{ box-sizing:border-box; }
 html,body,#root{ margin:0; padding:0; }
+/* Trava scroll horizontal solto da página inteira (`clip`, não `hidden` —
+   `hidden` no html pode atrapalhar `position:sticky` em alguns navegadores,
+   `clip` não). Rede de segurança pro layout mobile abaixo; nenhum elemento
+   deveria ultrapassar a viewport, isso só garante que, se algo escapar um
+   pixel por engano, a página não ganha uma barra de rolagem lateral solta. */
+html{ overflow-x:clip; }
 body{
   font-family: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif;
   background:
@@ -532,6 +538,10 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 
 /* ---------- kpi ---------- */
 .kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+/* Variante de 3 colunas (Ruptura/Excesso) — antes era style inline no JSX,
+   virou classe só pra poder ter um breakpoint mobile próprio (style inline
+   não pode ser sobrescrito por media query). */
+.kpi-grid-3{ grid-template-columns:repeat(3,1fr); }
 .kpi-card{
   background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
   border:1px solid var(--border); border-radius: var(--radius-md);
@@ -1062,4 +1072,54 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .config-nav{ position:static; }
   .settings-row{ flex-direction:column; align-items:flex-start; gap:10px; }
   .settings-row-control .config-input{ min-width:0; width:100%; }
+}
+
+/* ---------- mobile (telefone) ----------
+   Abaixo de 640px o objetivo é: nada corta linha, nada deforma, nada
+   estoura a largura da tela. Estratégia principal: esconder texto
+   redundante/secundário (mantendo tudo acessível por ícone+tooltip) em vez
+   de encolher fonte ou truncar com "…" — pedido explícito do usuário. */
+@media (max-width: 640px){
+  .content{ padding:16px 14px 40px 14px; }
+  .topbar{ padding:0 14px; gap:8px; }
+  .topbar h1{ font-size:16.5px; }
+  /* Subtítulo da Topbar é só contexto extra (o título já diz o essencial)
+     — sai no mobile pra sobrar largura pros botões de ação, que são o que
+     realmente precisa funcionar bem no dedo. */
+  .topbar .subtitle{ display:none; }
+
+  /* Botões de ação da Topbar (Sincronizar/Limpar filtros/Filial) viram
+     só ícone — o texto (já dentro de <span> no JSX) some, ícone+chevron
+     continuam. Quadrado, mais fácil de tocar, sem sobrar espaço vazio. */
+  .topbar .date-filter-btn{ padding:9px 10px; gap:0; }
+  .topbar .date-filter-btn span{ display:none; }
+  .topbar .date-filter-chevron{ margin-left:2px; }
+
+  /* Chip do usuário: só o avatar continua (nome/cargo em texto não cabe
+     nem faz falta aqui — o avatar já identifica quem está logado). */
+  .user-chip{ padding-left:8px; gap:0; }
+  .user-chip .who{ display:none; }
+
+  /* Barra de sub-abas do Estoque (Geral/Ruptura/etc.): em vez de espremer
+     8 rótulos até truncar com "…", a barra vira scroll horizontal contido
+     (mesmo princípio já usado nas tabelas) — cada aba mantém a largura
+     natural do texto, nada é cortado. */
+  .subtabs{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .subtabs .subtab{ flex:0 0 auto; padding-left:14px; padding-right:14px; }
+
+  .card{ padding:14px; }
+  /* Cabeçalho do card: título em cima, ações embaixo, ocupando a largura
+     toda — evita empurrar 2-4 botões pra fora da tela numa linha só.
+     Ações quebram linha no tamanho natural (sem esticar) — assim um botão
+     de texto ("Exportar Excel") e um botão só-ícone (setas de paginação
+     do gráfico) convivem na mesma regra sem nenhum dos dois deformar. */
+  .card-head{ flex-direction:column; align-items:stretch; }
+  .card-actions{ flex-wrap:wrap; }
+
+  .kpi-grid, .kpi-grid-3{ grid-template-columns:1fr; }
+  .indisp-kpi-row{ flex-direction:column; gap:8px; }
+
+  .doc-paginador{ gap:8px; }
+  .doc-pag-info{ min-width:0; flex:1 1 auto; }
+  .doc-pag-titulo{ font-size:13.5px; }
 }

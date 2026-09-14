@@ -574,7 +574,7 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
       </div>
 
       {/* 2. KPIs Oficiais (Exatamente igual à aba Geral) */}
-      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="kpi-grid kpi-grid-3">
         <RupStat label="Itens com risco de ruptura" value={statsFiltrados.produtosEmRuptura} formatter={v => Math.round(v).toLocaleString('pt-BR')} />
         <RupStat label="Pendente Entrada" value={statsFiltrados.totalPendenteEntrada} formatter={v => Math.round(v).toLocaleString('pt-BR')} />
         <RupStat label="Pedido Pendente" value={statsFiltrados.totalPedidoPendente} formatter={v => Math.round(v).toLocaleString('pt-BR')} />

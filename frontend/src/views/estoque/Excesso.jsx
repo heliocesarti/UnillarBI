@@ -277,7 +277,7 @@ const Excesso = forwardRef(function Excesso({ filial, onSyncStatusChange }, ref)
         </div>
       </div>
 
-      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="kpi-grid kpi-grid-3">
         <RupStat label="Preço de custo" value={kpis.custo} formatter={fmtFull} />
         <RupStat label="Preço de venda" value={kpis.venda} formatter={fmtFull} />
         <RupStat label="Produtos em excesso" value={kpis.produtosExcesso} formatter={fmtInt} />
