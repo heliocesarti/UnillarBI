@@ -444,6 +444,7 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
     vendas: round2(visibleProdutosTabela.reduce((a, p) => a + p.vendas, 0)),
     estoque: round2(visibleProdutosTabela.reduce((a, p) => a + p.estoque, 0)),
     entrada: round2(visibleProdutosTabela.reduce((a, p) => a + p.entrada, 0)),
+    pedidos: round2(visibleProdutosTabela.reduce((a, p) => a + p.pedidos, 0)),
   }), [visibleProdutosTabela]);
 
   const sortedProdutos = useMemo(() => {
@@ -712,7 +713,8 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
                 <td className="num">{tableTotals.vendas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td className="num">{fmtNum(tableTotals.estoque)}</td>
                 <td className="num">{fmtNum(tableTotals.entrada)}</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td className="num">{fmtNum(tableTotals.pedidos)}</td>
+                <td></td><td></td><td></td><td></td><td></td><td></td>
               </tr>
             </tfoot>
           </table>
