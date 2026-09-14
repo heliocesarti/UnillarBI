@@ -1,4 +1,4 @@
-:root{
+﻿:root{
   color-scheme: dark;
   --page-bg: #070C1A;
   --page-bg-2: #060a16;
@@ -15,10 +15,10 @@
   --baseline: #2C3B63;
 
   /* Tokens de apoio que mudam de valor entre tema escuro/claro (overlays,
-     ênfases e sobreposições que antes eram cor fixa espalhada pelo CSS —
+     Ãªnfases e sobreposiÃ§Ãµes que antes eram cor fixa espalhada pelo CSS â€”
      ver bloco [data-theme="light"] mais abaixo pra saber o valor de cada
-     um no claro). Valor aqui é exatamente o que já existia no escuro,
-     então nada muda visualmente no escuro por causa disso. */
+     um no claro). Valor aqui Ã© exatamente o que jÃ¡ existia no escuro,
+     entÃ£o nada muda visualmente no escuro por causa disso. */
   --overlay-1: rgba(255,255,255,0.04);
   --overlay-2: rgba(255,255,255,0.05);
   --overlay-3: rgba(255,255,255,0.06);
@@ -37,13 +37,13 @@
   --accent-green-text-hover: #a6edb0;
   --error-text: #f3b9b9;
 
-  /* A barra lateral tem paleta própria, um pouco mais escura que o
-     conteúdo principal em cada tema, pra separar visualmente as duas
-     colunas (no escuro isso já era natural; no claro fica um cinza-azulado
-     suave, mais escuro que o fundo branco do conteúdo). Redefinidos de
-     novo dentro de [data-theme="light"] — a regra `.sidebar` mais abaixo
+  /* A barra lateral tem paleta prÃ³pria, um pouco mais escura que o
+     conteÃºdo principal em cada tema, pra separar visualmente as duas
+     colunas (no escuro isso jÃ¡ era natural; no claro fica um cinza-azulado
+     suave, mais escuro que o fundo branco do conteÃºdo). Redefinidos de
+     novo dentro de [data-theme="light"] â€” a regra `.sidebar` mais abaixo
      redefine localmente --text-primary/--border/etc pra esses valores,
-     então tudo dentro da sidebar (nav, rodapé) herda certo sem precisar
+     entÃ£o tudo dentro da sidebar (nav, rodapÃ©) herda certo sem precisar
      tocar em cada seletor individual. */
   --sidebar-top: #0F1A33;
   --sidebar-deep: #0B1530;
@@ -61,30 +61,30 @@
 
   /* Destaque do item ativo na barra lateral: branco no escuro (contrasta
      com o fundo azul-marinho da sidebar), azul-marinho no claro (contrasta
-     com a sidebar clara) — ver override em [data-theme="light"]. */
+     com a sidebar clara) â€” ver override em [data-theme="light"]. */
   --nav-active-accent: #FFFFFF;
   --nav-active-bg-strong: rgba(255,255,255,0.14);
   --nav-active-bg-soft: rgba(255,255,255,0.03);
   --nav-active-border: rgba(255,255,255,0.22);
   --nav-active-glow: rgba(255,255,255,0.5);
 
-  /* Altura compartilhada entre o retângulo da logo (.brand) e a Topbar,
+  /* Altura compartilhada entre o retÃ¢ngulo da logo (.brand) e a Topbar,
      pra ficarem coladas sem brecha nem descompasso de tamanho entre as
-     duas — antes cada uma tentava bater por padding aproximado. */
+     duas â€” antes cada uma tentava bater por padding aproximado. */
   --header-h: 74px;
 
-  /* Subtítulo da Topbar (texto pequeno) ficou pouco legível depois do
-     tingimento por ambiente (--env-wash) — no escuro os tons ficaram bem
-     vivos/claros, então o texto precisa ser CLARO pra continuar legível
-     em cima disso (mais claro que --text-muted só aqui, sem mexer no tom
+  /* SubtÃ­tulo da Topbar (texto pequeno) ficou pouco legÃ­vel depois do
+     tingimento por ambiente (--env-wash) â€” no escuro os tons ficaram bem
+     vivos/claros, entÃ£o o texto precisa ser CLARO pra continuar legÃ­vel
+     em cima disso (mais claro que --text-muted sÃ³ aqui, sem mexer no tom
      usado no resto do app). Sem valor no tema claro (usa o --text-muted
-     padrão de lá, que não foi mexido/pedido). */
+     padrÃ£o de lÃ¡, que nÃ£o foi mexido/pedido). */
   --topbar-subtitle-color: #DCE3F5;
 
   /* Tingimento da Topbar por ambiente selecionado (App.jsx aplica
-     data-ambiente no .app-shell) — gradiente de 2 pontas, dá efeito de
+     data-ambiente no .app-shell) â€” gradiente de 2 pontas, dÃ¡ efeito de
      brilho/profundidade em vez de cor chapada. Sem override = sem cor
-     (transparent nas duas pontas), efeito só existe pros ambientes
+     (transparent nas duas pontas), efeito sÃ³ existe pros ambientes
      definidos abaixo. */
   --env-wash-a: transparent;
   --env-wash-b: transparent;
@@ -125,10 +125,10 @@
 }
 
 /* ---------- tema claro ----------
-   Ativado via [data-theme="light"] no <html> (ver utils/theme.js). Só
-   redefine os tokens acima — nenhuma regra de layout muda, então a
-   estrutura/comportamento é idêntico nos dois temas, só a paleta muda.
-   A sidebar (--sidebar-*) fica de fora de propósito: ela é a âncora de
+   Ativado via [data-theme="light"] no <html> (ver utils/theme.js). SÃ³
+   redefine os tokens acima â€” nenhuma regra de layout muda, entÃ£o a
+   estrutura/comportamento Ã© idÃªntico nos dois temas, sÃ³ a paleta muda.
+   A sidebar (--sidebar-*) fica de fora de propÃ³sito: ela Ã© a Ã¢ncora de
    marca fixa, sempre escura, nos dois temas. */
 [data-theme="light"]{
   color-scheme: light;
@@ -165,8 +165,8 @@
   --error-text: #b32020;
 
   /* Sidebar no claro: cinza-azulado suave, mais escuro que o branco do
-     conteúdo (--surface-2), pra manter a separação visual das 2 colunas
-     que já existia no escuro. Texto vira escuro (a sidebar não é mais
+     conteÃºdo (--surface-2), pra manter a separaÃ§Ã£o visual das 2 colunas
+     que jÃ¡ existia no escuro. Texto vira escuro (a sidebar nÃ£o Ã© mais
      fixa-escura no claro). */
   --sidebar-top: #E7EBF5;
   --sidebar-deep: #DCE2F0;
@@ -184,19 +184,19 @@
   --nav-active-border: rgba(15,26,51,0.22);
   --nav-active-glow: rgba(15,26,51,0.5);
 
-  /* No claro o --text-muted padrão (mais claro) não lê bem sobre o
-     tingimento por ambiente da Topbar — precisa de algo mais escuro só
+  /* No claro o --text-muted padrÃ£o (mais claro) nÃ£o lÃª bem sobre o
+     tingimento por ambiente da Topbar â€” precisa de algo mais escuro sÃ³
      aqui, oposto do que precisa no escuro. */
   --topbar-subtitle-color: #242B3A;
 }
 
 *{ box-sizing:border-box; }
 html,body,#root{ margin:0; padding:0; }
-/* Trava scroll horizontal solto da página inteira (`clip`, não `hidden` —
+/* Trava scroll horizontal solto da pÃ¡gina inteira (`clip`, nÃ£o `hidden` â€”
    `hidden` no html pode atrapalhar `position:sticky` em alguns navegadores,
-   `clip` não). Rede de segurança pro layout mobile abaixo; nenhum elemento
-   deveria ultrapassar a viewport, isso só garante que, se algo escapar um
-   pixel por engano, a página não ganha uma barra de rolagem lateral solta. */
+   `clip` nÃ£o). Rede de seguranÃ§a pro layout mobile abaixo; nenhum elemento
+   deveria ultrapassar a viewport, isso sÃ³ garante que, se algo escapar um
+   pixel por engano, a pÃ¡gina nÃ£o ganha uma barra de rolagem lateral solta. */
 html{ overflow-x:clip; }
 body{
   font-family: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -224,16 +224,16 @@ a, button{ font-family:inherit; }
   min-height:100vh;
 }
 
-/* Cor de identidade por ambiente (só na Topbar). Cada uma pensada pra ter
-   uma ligação com o próprio ambiente: azul da marca (Visão Geral), verde
-   "cédula de dinheiro" (Vendas), marrom-couro de caixa/estoque físico
-   (Estoque), dourado metálico (Financeiro) e cinza neutro/utilitário
-   (Configurações, único que não é conteúdo de negócio). Vendas/Estoque/
+/* Cor de identidade por ambiente (sÃ³ na Topbar). Cada uma pensada pra ter
+   uma ligaÃ§Ã£o com o prÃ³prio ambiente: azul da marca (VisÃ£o Geral), verde
+   "cÃ©dula de dinheiro" (Vendas), marrom-couro de caixa/estoque fÃ­sico
+   (Estoque), dourado metÃ¡lico (Financeiro) e cinza neutro/utilitÃ¡rio
+   (ConfiguraÃ§Ãµes, Ãºnico que nÃ£o Ã© conteÃºdo de negÃ³cio). Vendas/Estoque/
    Financeiro usam gradiente de 2 tons pra dar profundidade/brilho em vez
-   de cor chapada (pedido do usuário pra ficarem "mais bonitos"). */
-/* Tema escuro (padrão): tons mais claros/vivos que o normal — sobre o
-   fundo quase preto da Topbar, uma cor "correta" mas discreta esfumaça e
-   perde a conexão com o ambiente. Aqui sim vale exagerar o brilho. */
+   de cor chapada (pedido do usuÃ¡rio pra ficarem "mais bonitos"). */
+/* Tema escuro (padrÃ£o): tons mais claros/vivos que o normal â€” sobre o
+   fundo quase preto da Topbar, uma cor "correta" mas discreta esfumaÃ§a e
+   perde a conexÃ£o com o ambiente. Aqui sim vale exagerar o brilho. */
 .app-shell[data-ambiente="visao-geral"]{
   --env-wash-a: rgba(110,208,255,0.56);
   --env-wash-b: rgba(35,140,235,0.56);
@@ -255,7 +255,7 @@ a, button{ font-family:inherit; }
   --env-wash-b: rgba(138,151,172,0.46);
 }
 
-/* Tema claro: a Topbar já parte de um fundo claro, então os tons originais
+/* Tema claro: a Topbar jÃ¡ parte de um fundo claro, entÃ£o os tons originais
    (mais contidos) continuam com boa leitura sem precisar clarear mais. */
 [data-theme="light"] .app-shell[data-ambiente="visao-geral"]{
   --env-wash-a: rgba(90,180,255,0.48);
@@ -280,13 +280,13 @@ a, button{ font-family:inherit; }
 
 /* ---------- sidebar ---------- */
 .sidebar{
-  /* Paleta própria (--sidebar-*, com valor diferente em cada tema — ver
+  /* Paleta prÃ³pria (--sidebar-*, com valor diferente em cada tema â€” ver
      :root/[data-theme="light"]): redefine localmente os tokens de texto/
-     borda/overlay, então tudo dentro da sidebar (nav, rodapé) herda
+     borda/overlay, entÃ£o tudo dentro da sidebar (nav, rodapÃ©) herda
      certo sem precisar repetir isso em cada seletor filho. O `color`
-     explícito aqui é essencial — sem ele, elemento sem cor própria (ex:
-     <b> sem classe) herdaria o `color` já resolvido lá no <body> (escopo
-     da página, não da sidebar), que diverge do valor daqui no tema claro. */
+     explÃ­cito aqui Ã© essencial â€” sem ele, elemento sem cor prÃ³pria (ex:
+     <b> sem classe) herdaria o `color` jÃ¡ resolvido lÃ¡ no <body> (escopo
+     da pÃ¡gina, nÃ£o da sidebar), que diverge do valor daqui no tema claro. */
   --text-primary: var(--sidebar-text);
   --text-secondary: var(--sidebar-text-secondary);
   --text-muted: var(--sidebar-text-muted);
@@ -304,10 +304,10 @@ a, button{ font-family:inherit; }
   transition: background 0.2s ease;
 }
 .brand{
-  /* Faixa fixa azul-marinho escuro, igual à versão escura, independente
-     do tema ativo — âncora de marca que não segue --sidebar-* claro.
+  /* Faixa fixa azul-marinho escuro, igual Ã  versÃ£o escura, independente
+     do tema ativo â€” Ã¢ncora de marca que nÃ£o segue --sidebar-* claro.
      Margem negativa cancela o padding do .sidebar pra encostar no topo
-     (sem espaço na borda superior) e nas duas laterais da barra vertical;
+     (sem espaÃ§o na borda superior) e nas duas laterais da barra vertical;
      padding vertical soma a mesma altura aproximada do .topbar. */
   display:flex; align-items:center; gap:12px;
   margin:-22px -16px 18px -16px;
@@ -368,10 +368,10 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   border-bottom:1px solid var(--border);
   transition: background 0.2s ease;
   /* Safari/iOS tem um bug conhecido: `position:sticky` + `backdrop-filter`
-     sem estar numa camada de composição própria pode "vazar" o conteúdo
-     que passou por baixo durante o scroll rápido/bounce elástico (rola por
-     baixo da barra, às vezes visível até atrás do relógio/bateria do
-     celular) — a barra vira uma camada GPU isolada e passa a cobrir
+     sem estar numa camada de composiÃ§Ã£o prÃ³pria pode "vazar" o conteÃºdo
+     que passou por baixo durante o scroll rÃ¡pido/bounce elÃ¡stico (rola por
+     baixo da barra, Ã s vezes visÃ­vel atÃ© atrÃ¡s do relÃ³gio/bateria do
+     celular) â€” a barra vira uma camada GPU isolada e passa a cobrir
      direito o que tem embaixo o tempo todo. */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
@@ -395,11 +395,11 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   padding:9px 13px; border-radius:10px; font-size:12.5px; font-weight:600; cursor:pointer;
 }
 .date-filter-btn:hover{ border-color: rgba(57,135,229,0.5); }
-/* Botões de ação da Topbar (Sincronizar/Limpar filtros/Filial) — azul-
-   marinho fixo (não segue tema, igual .brand), pra conectar visualmente
-   com a identidade da marca em vez do branco neutro de --surface-2. Só
-   aqui, não afeta os filtros da própria tela (.rup-filters/.indisp-filter
-   têm sua própria regra abaixo). */
+/* BotÃµes de aÃ§Ã£o da Topbar (Sincronizar/Limpar filtros/Filial) â€” azul-
+   marinho fixo (nÃ£o segue tema, igual .brand), pra conectar visualmente
+   com a identidade da marca em vez do branco neutro de --surface-2. SÃ³
+   aqui, nÃ£o afeta os filtros da prÃ³pria tela (.rup-filters/.indisp-filter
+   tÃªm sua prÃ³pria regra abaixo). */
 .topbar .date-filter-btn{ background:#E7EAF2; border-color: rgba(0,0,0,0.12); color:#1E2430; }
 .topbar .date-filter-btn svg, .topbar .date-filter-chevron{ color:#4B5568; }
 .date-filter-btn:disabled{ opacity:0.55; cursor:not-allowed; }
@@ -426,8 +426,8 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .date-menu-row.selected .check{ opacity:1; }
 .date-menu-foot{ border-top:1px solid var(--border); margin-top:4px; padding-top:6px; font-size:11px; color:var(--text-muted); padding-left:10px; padding-bottom:4px; }
 
-/* Filtros de Departamento/Grupo/Subgrupo (Indisponível) — mesma largura
-   sempre, texto que não cabe corta com "...". */
+/* Filtros de Departamento/Grupo/Subgrupo (IndisponÃ­vel) â€” mesma largura
+   sempre, texto que nÃ£o cabe corta com "...". */
 .indisp-filter .date-filter{ width:150px; }
 .indisp-filter .date-filter-btn{ width:100%; justify-content:space-between; }
 .indisp-filter .date-filter-btn span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -458,8 +458,8 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   flex:1 1 0; min-width:0; text-align:center;
 }
 .subtab:hover{ color:var(--text-primary); background:var(--overlay-1); }
-/* Mesma cor de seleção da sidebar (--nav-active-*: branco no escuro,
-   azul-marinho no claro) — antes era azul aqui, ficou inconsistente com a
+/* Mesma cor de seleÃ§Ã£o da sidebar (--nav-active-*: branco no escuro,
+   azul-marinho no claro) â€” antes era azul aqui, ficou inconsistente com a
    troca feita na barra da esquerda. */
 .subtab.active{
   color:var(--text-primary);
@@ -467,13 +467,13 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   border-color: var(--nav-active-border);
 }
 
-/* variante compacta: abas não esticam pra preencher a barra (útil quando
-   a lista de abas cresce aos poucos, como nos grupos de Configurações) */
+/* variante compacta: abas nÃ£o esticam pra preencher a barra (Ãºtil quando
+   a lista de abas cresce aos poucos, como nos grupos de ConfiguraÃ§Ãµes) */
 .config-subtabs{ justify-content:flex-start; margin-bottom:16px; }
 .config-subtabs .subtab{ flex:0 0 auto; padding-left:18px; padding-right:18px; }
-/* Dentro de Configurações, essa barra é a 3ª seleção (depois de ambiente
-   e módulo) — só a 1ª (.config-nav-header.active) fica azul; esta usa a
-   mesma marcação neutra do módulo (cinza claro + borda cinza escuro). */
+/* Dentro de ConfiguraÃ§Ãµes, essa barra Ã© a 3Âª seleÃ§Ã£o (depois de ambiente
+   e mÃ³dulo) â€” sÃ³ a 1Âª (.config-nav-header.active) fica azul; esta usa a
+   mesma marcaÃ§Ã£o neutra do mÃ³dulo (cinza claro + borda cinza escuro). */
 .config-subtabs .subtab.active{
   background: var(--overlay-3);
   border-color: var(--border-strong); border-width:1.5px;
@@ -550,9 +550,9 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 
 /* ---------- kpi ---------- */
 .kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
-/* Variante de 3 colunas (Ruptura/Excesso) — antes era style inline no JSX,
-   virou classe só pra poder ter um breakpoint mobile próprio (style inline
-   não pode ser sobrescrito por media query). */
+/* Variante de 3 colunas (Ruptura/Excesso) â€” antes era style inline no JSX,
+   virou classe sÃ³ pra poder ter um breakpoint mobile prÃ³prio (style inline
+   nÃ£o pode ser sobrescrito por media query). */
 .kpi-grid-3{ grid-template-columns:repeat(3,1fr); }
 .kpi-card{
   background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
@@ -563,7 +563,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .kpi-label{ font-size:12px; color:var(--text-secondary); font-weight:600; }
 .kpi-value-row{ display:flex; align-items:baseline; gap:9px; margin-top:8px; }
 .kpi-value{ font-size:27px; font-weight:700; letter-spacing:-0.2px; font-variant-numeric: proportional-nums; }
-/* Refinamento SaaS premium, só no tema claro (escuro fica como sempre foi). */
+/* Refinamento SaaS premium, sÃ³ no tema claro (escuro fica como sempre foi). */
 [data-theme="light"] .kpi-label{ font-size:11px; font-weight:500; color:#64748B; }
 [data-theme="light"] .kpi-value{ font-weight:800; color:var(--text-primary); }
 .kpi-delta{ display:inline-flex; align-items:center; gap:3px; font-size:11.5px; font-weight:700; padding:3px 7px; border-radius:20px; }
@@ -585,7 +585,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   font-variant-numeric: tabular-nums;
 }
 
-/* Filtros Minimalistas (Alto Nível / Clean) */
+/* Filtros Minimalistas (Alto NÃ­vel / Clean) */
 .rup-filters {
   display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; margin-top: 12px;
 }
@@ -615,9 +615,9 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .rup-minimal-input i { font-style: normal; font-size: 10.5px; color: var(--text-muted); }
 
 /* Todas as caixas da linha de filtros da Ruptura (dias, risco,
-   departamento, grupo, subgrupo) com a mesma largura fixa — texto que não
+   departamento, grupo, subgrupo) com a mesma largura fixa â€” texto que nÃ£o
    cabe corta com "...", e a setinha de cada uma sempre alinhada na mesma
-   posição, pra ficar óbvio que são todas seletores. */
+   posiÃ§Ã£o, pra ficar Ã³bvio que sÃ£o todas seletores. */
 .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input {
   background: transparent; border: 1px solid var(--border);
   border-radius: 6px; padding: 0 8px; height: 28px; width: 148px;
@@ -695,7 +695,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 .config-input:focus{ outline:none; border-color:rgba(57,135,229,0.6); }
 
-/* ---------- configurações: shell multi-ambiente ---------- */
+/* ---------- configuraÃ§Ãµes: shell multi-ambiente ---------- */
 .config-shell{ display:grid; grid-template-columns:264px 1fr; gap:20px; align-items:stretch; }
 
 .config-nav{
@@ -711,8 +711,8 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   font-size:13px; font-weight:700; padding:11px 12px; border-radius:9px; cursor:pointer;
 }
 .config-nav-header:hover{ background:var(--overlay-1); color:var(--text-primary); }
-/* Vermelho é só da barra vertical da esquerda (Sidebar principal) — aqui
-   dentro já é "ambiente da direita", então a seleção é sempre azul. */
+/* Vermelho Ã© sÃ³ da barra vertical da esquerda (Sidebar principal) â€” aqui
+   dentro jÃ¡ Ã© "ambiente da direita", entÃ£o a seleÃ§Ã£o Ã© sempre azul. */
 .config-nav-header.active{
   color:var(--text-primary);
   background: linear-gradient(90deg, rgba(57,135,229,0.22), rgba(57,135,229,0.06));
@@ -732,9 +732,9 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   font-size:12px; font-weight:600; padding:7px 8px; border-radius:7px; cursor:pointer;
 }
 .config-nav-item:hover{ background:var(--overlay-1); color:var(--text-primary); }
-/* Só a 1ª seleção do ambiente direito (.config-nav-header.active acima)
-   fica azul — o módulo dentro dele é a 2ª seleção, marcação neutra
-   (cinza claro + borda cinza escuro), pra não competir com a 1ª. */
+/* SÃ³ a 1Âª seleÃ§Ã£o do ambiente direito (.config-nav-header.active acima)
+   fica azul â€” o mÃ³dulo dentro dele Ã© a 2Âª seleÃ§Ã£o, marcaÃ§Ã£o neutra
+   (cinza claro + borda cinza escuro), pra nÃ£o competir com a 1Âª. */
 .config-nav-item.active{
   background: var(--overlay-3);
   color: var(--text-primary); border-color: var(--border-strong); border-width:1.5px;
@@ -755,7 +755,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 .config-breadcrumb-sep{ opacity:0.5; }
 
-/* ---------- configurações: painel de parâmetros ---------- */
+/* ---------- configuraÃ§Ãµes: painel de parÃ¢metros ---------- */
 .settings-section{
   background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg);
 }
@@ -773,18 +773,18 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .settings-row-control{ flex:none; }
 .settings-row-control .config-input{ min-width:200px; }
 
-/* Lista de exceções (Aglutinar > Departamento/Grupo/Subgrupo) — bloco
-   dentro do mesmo card, abaixo das linhas normais de parâmetro. Cada
-   exceção é uma linha `.settings-row` normal (mesma "pegada" das linhas
-   de parâmetro acima), só que com vários controles do lado direito. */
+/* Lista de exceÃ§Ãµes (Aglutinar > Departamento/Grupo/Subgrupo) â€” bloco
+   dentro do mesmo card, abaixo das linhas normais de parÃ¢metro. Cada
+   exceÃ§Ã£o Ã© uma linha `.settings-row` normal (mesma "pegada" das linhas
+   de parÃ¢metro acima), sÃ³ que com vÃ¡rios controles do lado direito. */
 .settings-subsection{ padding:14px 16px 16px 16px; border-top:1px solid var(--border); }
 .settings-subsection-help{ font-size:11px; color:var(--text-muted); line-height:1.4; margin:0 0 4px 0; max-width:560px; }
 .settings-exception-hint{ font-size:11px; color:var(--text-muted); flex:none; }
 
-/* Busca (filtra por texto) e paginação (5 por página) da lista de
-   exceções — só aparecem quando há mais exceções que cabem numa página,
-   pra não poluir a lista curta. Cada exceção continua sempre expandida,
-   igual sempre foi (nada mudou na própria linha). */
+/* Busca (filtra por texto) e paginaÃ§Ã£o (5 por pÃ¡gina) da lista de
+   exceÃ§Ãµes â€” sÃ³ aparecem quando hÃ¡ mais exceÃ§Ãµes que cabem numa pÃ¡gina,
+   pra nÃ£o poluir a lista curta. Cada exceÃ§Ã£o continua sempre expandida,
+   igual sempre foi (nada mudou na prÃ³pria linha). */
 .rup-excecao-busca{ width:100%; box-sizing:border-box; margin:0 0 10px 0; }
 .rup-excecao-paginacao{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -795,11 +795,11 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .rup-excecao-paginacao-num{ font-size:11px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
 .rup-excecao-paginacao-botoes .icon-btn:disabled{ opacity:0.4; cursor:default; }
 
-/* campo de seleção (single ou multi): a linha nunca muda de tamanho —
+/* campo de seleÃ§Ã£o (single ou multi): a linha nunca muda de tamanho â€”
    clicar na caixinha de valor atual abre um menu FLUTUANTE por cima do
-   conteúdo (não empurra as outras linhas pra baixo). Caixinha com
+   conteÃºdo (nÃ£o empurra as outras linhas pra baixo). Caixinha com
    largura fixa pra todas ficarem do mesmo tamanho, mesmo com textos
-   diferentes (trunca com "…" quando não cabe). */
+   diferentes (trunca com "â€¦" quando nÃ£o cabe). */
 .settings-float-anchor{ position:relative; flex:none; }
 .settings-row-current{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -831,10 +831,10 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .settings-float-item .check{ width:13px; height:13px; opacity:0; color:var(--series-1); flex:none; }
 .settings-float-item.selected .check{ opacity:1; }
 
-/* Campo de busca do seletor de Departamento/Grupo/Subgrupo (exceções do
-   Aglutinar, InlineMultiSelect) — regras novas, não alteram nada de
+/* Campo de busca do seletor de Departamento/Grupo/Subgrupo (exceÃ§Ãµes do
+   Aglutinar, InlineMultiSelect) â€” regras novas, nÃ£o alteram nada de
    .settings-float-menu/.settings-float-item usados pelos outros
-   seletores de Configurações (Situação, Colunas de exportação etc.). */
+   seletores de ConfiguraÃ§Ãµes (SituaÃ§Ã£o, Colunas de exportaÃ§Ã£o etc.). */
 .settings-float-menu.inline-ms-menu{ overflow:visible; max-height:none; }
 .settings-float-search{
   width:100%; box-sizing:border-box; font-size:11px; font-family:inherit;
@@ -863,7 +863,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 .settings-banner.is-error{ background:rgba(208,59,59,0.12); border-color:rgba(208,59,59,0.35); color:var(--error-text); }
 
-/* Configurações → Documentação: texto corrido, paginado, não formulário. */
+/* ConfiguraÃ§Ãµes â†’ DocumentaÃ§Ã£o: texto corrido, paginado, nÃ£o formulÃ¡rio. */
 .doc-panel{ display:flex; flex-direction:column; }
 .doc-page{
   background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg);
@@ -880,8 +880,8 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .doc-bloco-corpo i{ color:var(--text-primary); font-style:normal; }
 .doc-placeholder{ padding:32px 20px; }
 
-/* Passador de página (setas + pontos) — usado no submenu de Estoque, onde
-   8 rótulos não cabem bem numa fileira de abas. */
+/* Passador de pÃ¡gina (setas + pontos) â€” usado no submenu de Estoque, onde
+   8 rÃ³tulos nÃ£o cabem bem numa fileira de abas. */
 .doc-paginador{
   display:flex; align-items:center; justify-content:center; gap:18px;
   padding:4px 0 6px;
@@ -949,37 +949,37 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 .data-table th.sorted{ color:var(--text-primary); }
 .data-table .sort-arrow{ display:inline-block; margin-left:4px; font-size:8px; opacity:0.85; }
 .data-table th.num, .data-table td.num{ text-align:right; }
-.data-table td.num{ color:var(--text-muted); font-weight:400; } /* Igual ao subtítulo */
+.data-table td.num{ color:var(--text-muted); font-weight:400; } /* Igual ao subtÃ­tulo */
 .data-table tbody tr{ transition: background 0.15s ease; cursor:pointer; }
 .data-table tbody tr:nth-child(even) td{ background:var(--table-stripe-bg); }
 .data-table tbody tr:hover td{ background:var(--overlay-1); }
 .data-table tbody tr.selected td{ background:rgba(57,135,229,0.1); }
 .data-table tbody tr.selected:hover td{ background:rgba(57,135,229,0.16); }
 
-/* Tabela da Ruptura (e modal de família do Aglutinar): mais compacta que o
-   padrão de .data-table — colunas raramente precisam de tanto respiro, os
-   números não costumam ultrapassar o espaço. Só ajuste visual (padding/
+/* Tabela da Ruptura (e modal de famÃ­lia do Aglutinar): mais compacta que o
+   padrÃ£o de .data-table â€” colunas raramente precisam de tanto respiro, os
+   nÃºmeros nÃ£o costumam ultrapassar o espaÃ§o. SÃ³ ajuste visual (padding/
    fonte), reaproveita todo o resto do estilo/cores/hover de .data-table. */
 .data-table.rup-table-compact{ font-size:11px; }
 .data-table.rup-table-compact th,
 .data-table.rup-table-compact td{ padding:6px 10px; }
 
-/* Cabeçalho das 2 tabelas da Ruptura (tabela principal e o modal de
-   família do Aglutinar, únicas que usam .rup-table-compact): barra
-   cinza um pouco mais marcada que o resto do app + títulos de mais de
+/* CabeÃ§alho das 2 tabelas da Ruptura (tabela principal e o modal de
+   famÃ­lia do Aglutinar, Ãºnicas que usam .rup-table-compact): barra
+   cinza um pouco mais marcada que o resto do app + tÃ­tulos de mais de
    1 palavra em 2 linhas (quebra manual via <br/> no JSX) pra encurtar a
-   coluna sem cortar nem embolar o número da linha de baixo.
-   Centralização vertical NÃO usa vertical-align (a matemática de
-   line-box do vertical-align:middle depende de métrica de fonte por
-   caractere, e mostrou inconsistência real entre títulos de 1 palavra
-   iguais — "Código" x "Ruptura"/"Descrição" deveriam ficar idênticos e
-   não ficaram). Em vez disso, o próprio texto do cabeçalho é embrulhado
+   coluna sem cortar nem embolar o nÃºmero da linha de baixo.
+   CentralizaÃ§Ã£o vertical NÃƒO usa vertical-align (a matemÃ¡tica de
+   line-box do vertical-align:middle depende de mÃ©trica de fonte por
+   caractere, e mostrou inconsistÃªncia real entre tÃ­tulos de 1 palavra
+   iguais â€” "CÃ³digo" x "Ruptura"/"DescriÃ§Ã£o" deveriam ficar idÃªnticos e
+   nÃ£o ficaram). Em vez disso, o prÃ³prio texto do cabeÃ§alho Ã© embrulhado
    em .th-stack (span), um flex container que centraliza de forma
-   determinística dentro de 100% da altura da célula — título de 1
-   palavra fica no centro exato da barra; título de 2 linhas (1 bloco só,
-   por causa do <br/>) também centraliza como bloco, então sobe um pouco
+   determinÃ­stica dentro de 100% da altura da cÃ©lula â€” tÃ­tulo de 1
+   palavra fica no centro exato da barra; tÃ­tulo de 2 linhas (1 bloco sÃ³,
+   por causa do <br/>) tambÃ©m centraliza como bloco, entÃ£o sobe um pouco
    acima do centro e desce um pouco abaixo, mas sempre com a MESMA altura
-   de referência que os títulos de 1 palavra usam — os 2 grupos ficam
+   de referÃªncia que os tÃ­tulos de 1 palavra usam â€” os 2 grupos ficam
    garantidamente consistentes entre si. */
 .data-table.rup-table-compact thead th{
   background: var(--table-header-bg-strong);
@@ -993,20 +993,20 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   line-height: 1.35;
   white-space: normal;
 }
-/* Colunas numéricas: título de 2 linhas alinhado à esquerda (a 1ª letra
-   da palavra de baixo cai bem embaixo da 1ª letra da palavra de cima,
+/* Colunas numÃ©ricas: tÃ­tulo de 2 linhas alinhado Ã  esquerda (a 1Âª letra
+   da palavra de baixo cai bem embaixo da 1Âª letra da palavra de cima,
    sem centralizar cada linha separada), e o valor logo abaixo
-   centralizado em relação a esse título — só aqui, não é o padrão
-   (alinhado à direita) do resto do app. */
+   centralizado em relaÃ§Ã£o a esse tÃ­tulo â€” sÃ³ aqui, nÃ£o Ã© o padrÃ£o
+   (alinhado Ã  direita) do resto do app. */
 .data-table.rup-table-compact th.num{ text-align:left; }
 .data-table.rup-table-compact td.num{ text-align:center; }
 
-/* Aproxima o bloco Marca + colunas numéricas (Total vendas 60d em
-   diante): reduz só o padding horizontal dessas colunas (mantém o
-   vertical, herdado do padding:6px 10px de .rup-table-compact th/td) —
-   Marca fica mais perto de Descrição (com um respiro pequeno, não
-   colado) e as numéricas ficam mais compactas entre si e mais perto de
-   Marca. Nenhuma coluna foi removida/reordenada, só o espaçamento. */
+/* Aproxima o bloco Marca + colunas numÃ©ricas (Total vendas 60d em
+   diante): reduz sÃ³ o padding horizontal dessas colunas (mantÃ©m o
+   vertical, herdado do padding:6px 10px de .rup-table-compact th/td) â€”
+   Marca fica mais perto de DescriÃ§Ã£o (com um respiro pequeno, nÃ£o
+   colado) e as numÃ©ricas ficam mais compactas entre si e mais perto de
+   Marca. Nenhuma coluna foi removida/reordenada, sÃ³ o espaÃ§amento. */
 .data-table.rup-table-compact th.col-marca,
 .data-table.rup-table-compact td.col-marca,
 .data-table.rup-table-compact th.num,
@@ -1015,7 +1015,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   padding-right: 6px;
 }
 
-/* Linha de família do Aglutinar: mesmas colunas da tabela normal, só com
+/* Linha de famÃ­lia do Aglutinar: mesmas colunas da tabela normal, sÃ³ com
    um fundo verde bem sutil pra diferenciar de um produto real. */
 .rup-aglutinar-familia-row td{ background:rgba(74,222,128,0.06); border-bottom:1px solid rgba(74,222,128,0.14); }
 .rup-aglutinar-familia-row:hover td{ background:rgba(74,222,128,0.1); }
@@ -1087,37 +1087,37 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 
 /* ---------- mobile (telefone) ----------
-   Abaixo de 640px o objetivo é: nada corta linha, nada deforma, nada
-   estoura a largura da tela. Estratégia principal: esconder texto
-   redundante/secundário (mantendo tudo acessível por ícone+tooltip) em vez
-   de encolher fonte ou truncar com "…" — pedido explícito do usuário. */
+   Abaixo de 640px o objetivo Ã©: nada corta linha, nada deforma, nada
+   estoura a largura da tela. EstratÃ©gia principal: esconder texto
+   redundante/secundÃ¡rio (mantendo tudo acessÃ­vel por Ã­cone+tooltip) em vez
+   de encolher fonte ou truncar com "â€¦" â€” pedido explÃ­cito do usuÃ¡rio. */
 @media (max-width: 640px){
   .content{ padding:16px 14px 40px 14px; }
   .topbar{ padding:0 14px; gap:8px; }
   .topbar h1{ font-size:16.5px; }
-  /* Subtítulo da Topbar é só contexto extra (o título já diz o essencial)
-     — sai no mobile pra sobrar largura pros botões de ação, que são o que
+  /* SubtÃ­tulo da Topbar Ã© sÃ³ contexto extra (o tÃ­tulo jÃ¡ diz o essencial)
+     â€” sai no mobile pra sobrar largura pros botÃµes de aÃ§Ã£o, que sÃ£o o que
      realmente precisa funcionar bem no dedo. */
   .topbar .subtitle{ display:none; }
 
-  /* Botões de ação da Topbar (Sincronizar/Limpar filtros/Filial) viram
-     só ícone — o texto (já dentro de <span> no JSX) some, ícone+chevron
-     continuam. Quadrado, mais fácil de tocar, sem sobrar espaço vazio. */
+  /* BotÃµes de aÃ§Ã£o da Topbar (Sincronizar/Limpar filtros/Filial) viram
+     sÃ³ Ã­cone â€” o texto (jÃ¡ dentro de <span> no JSX) some, Ã­cone+chevron
+     continuam. Quadrado, mais fÃ¡cil de tocar, sem sobrar espaÃ§o vazio. */
   .topbar .date-filter-btn{ padding:9px 10px; gap:0; }
   .topbar .date-filter-btn span{ display:none; }
   .topbar .date-filter-chevron{ margin-left:2px; }
 
-  /* Chip do usuário: só o avatar continua (nome/cargo em texto não cabe
-     nem faz falta aqui — o avatar já identifica quem está logado). */
+  /* Chip do usuÃ¡rio: sÃ³ o avatar continua (nome/cargo em texto nÃ£o cabe
+     nem faz falta aqui â€” o avatar jÃ¡ identifica quem estÃ¡ logado). */
   .user-chip{ padding-left:8px; gap:0; }
   .user-chip .who{ display:none; }
 
   .card{ padding:14px; }
-  /* Cabeçalho do card: título em cima, ações embaixo, ocupando a largura
-     toda — evita empurrar 2-4 botões pra fora da tela numa linha só.
-     Ações quebram linha no tamanho natural (sem esticar) — assim um botão
-     de texto ("Exportar Excel") e um botão só-ícone (setas de paginação
-     do gráfico) convivem na mesma regra sem nenhum dos dois deformar. */
+  /* CabeÃ§alho do card: tÃ­tulo em cima, aÃ§Ãµes embaixo, ocupando a largura
+     toda â€” evita empurrar 2-4 botÃµes pra fora da tela numa linha sÃ³.
+     AÃ§Ãµes quebram linha no tamanho natural (sem esticar) â€” assim um botÃ£o
+     de texto ("Exportar Excel") e um botÃ£o sÃ³-Ã­cone (setas de paginaÃ§Ã£o
+     do grÃ¡fico) convivem na mesma regra sem nenhum dos dois deformar. */
   .card-head{ flex-direction:column; align-items:stretch; }
   .card-actions{ flex-wrap:wrap; }
 
@@ -1129,51 +1129,51 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .doc-pag-titulo{ font-size:17px; }
 }
 
-/* Celular em pé (retrato): os 3 KPIs (Itens com risco de ruptura/Pendente
-   Entrada/Pedido Pendente) ficam um embaixo do outro — usuário testou a
-   versão numa linha só (compacta) e preferiu empilhado, fica mais fácil de
-   ler. Cartão volta ao tamanho normal (nada de fonte/padding reduzidos,
-   já que agora cada um tem a largura toda da tela). Os 3 gráficos ficam
-   empilhados também (herda a regra de 700px já existente acima), com
-   viewBox reduzido no próprio componente (VCarouselChart.jsx) pra não
-   ficarem com letra minúscula demais mesmo empilhados. */
+/* Celular em pÃ© (retrato): os 3 KPIs (Itens com risco de ruptura/Pendente
+   Entrada/Pedido Pendente) ficam um embaixo do outro â€” usuÃ¡rio testou a
+   versÃ£o numa linha sÃ³ (compacta) e preferiu empilhado, fica mais fÃ¡cil de
+   ler. CartÃ£o volta ao tamanho normal (nada de fonte/padding reduzidos,
+   jÃ¡ que agora cada um tem a largura toda da tela). Os 3 grÃ¡ficos ficam
+   empilhados tambÃ©m (herda a regra de 700px jÃ¡ existente acima), com
+   viewBox reduzido no prÃ³prio componente (VCarouselChart.jsx) pra nÃ£o
+   ficarem com letra minÃºscula demais mesmo empilhados. */
 @media (max-width: 640px) and (orientation: portrait){
   .kpi-grid-3{ grid-template-columns:1fr; }
   .ruptura-grid .card{ padding:12px; }
   .rup-donut-col .chart-wrap svg{ max-width:220px; }
 }
 
-/* Celular deitado (paisagem): volta a se comportar como desktop — os 3
-   gráficos lado a lado, não empilhados. As larguras (1180/1000/700px) já
+/* Celular deitado (paisagem): volta a se comportar como desktop â€” os 3
+   grÃ¡ficos lado a lado, nÃ£o empilhados. As larguras (1180/1000/700px) jÃ¡
    cobrem telas grandes, mas um celular deitado normalmente cai nessa
    faixa de largura (700 a ~950px) e sem isso ainda ficaria em 1 ou 2
-   colunas — aqui força de volta pro padrão de 3, igual ao desktop. */
+   colunas â€” aqui forÃ§a de volta pro padrÃ£o de 3, igual ao desktop. */
 @media (orientation: landscape) and (max-width: 1024px){
   .ruptura-grid{ grid-template-columns:repeat(3,1fr); }
   .kpi-grid-3{ grid-template-columns:repeat(3,1fr); }
   /* Os 3 cards continuam com `align-items:stretch` (herdado da regra base,
-     igual desktop) — é isso que deixa os 3 do MESMO tamanho, pedido
-     explícito do usuário. O que fazia ficar "esticado" antes não era o
+     igual desktop) â€” Ã© isso que deixa os 3 do MESMO tamanho, pedido
+     explÃ­cito do usuÃ¡rio. O que fazia ficar "esticado" antes nÃ£o era o
      stretch em si, era a legenda do donut quebrando linha e inflando a
-     altura de referência — já resolvido com a legenda compacta (só a
-     inicial). Altura/largura do viewBox do gráfico de barra (bem maiores
-     que antes) ficam no próprio VCarouselChart.jsx. */
+     altura de referÃªncia â€” jÃ¡ resolvido com a legenda compacta (sÃ³ a
+     inicial). Altura/largura do viewBox do grÃ¡fico de barra (bem maiores
+     que antes) ficam no prÃ³prio VCarouselChart.jsx. */
   .ruptura-grid .card{ padding:14px; }
-  /* Título do card ("Departamento"/"Grupo") um pouco maior — pedido do
-     usuário, cada coluna aqui é estreita e o título original (13.5px)
+  /* TÃ­tulo do card ("Departamento"/"Grupo") um pouco maior â€” pedido do
+     usuÃ¡rio, cada coluna aqui Ã© estreita e o tÃ­tulo original (13.5px)
      ficava discreto demais. */
   .ruptura-grid .card-title{ font-size:14.5px; }
 }
 
 /* Linha de filtros da Ruptura (dias/risco/departamento/grupo/subgrupo): em
-   pé E deitado. Só "Últimos 60 dias" e "Classificação de risco" vêm com
-   texto abreviado do JSX ("Últ. 60 dias"/"Class. de risco" — os 2 rótulos
+   pÃ© E deitado. SÃ³ "Ãšltimos 60 dias" e "ClassificaÃ§Ã£o de risco" vÃªm com
+   texto abreviado do JSX ("Ãšlt. 60 dias"/"Class. de risco" â€” os 2 rÃ³tulos
    mais compridos); Departamento/Grupo/Subgrupo continuam com o nome
-   completo, sem abreviar (pedido do usuário). Aqui só tira a largura fixa
-   de 148px (cada caixinha usa só o espaço que o próprio texto precisa) —
-   fonte/altura continuam bem próximas do tamanho normal, legível, não
-   uma miniatura. `flex-wrap` (herdado de `.rup-filters-row`) é só rede de
-   segurança: se mesmo assim não couber tudo, quebra pra 2ª linha em vez de
+   completo, sem abreviar (pedido do usuÃ¡rio). Aqui sÃ³ tira a largura fixa
+   de 148px (cada caixinha usa sÃ³ o espaÃ§o que o prÃ³prio texto precisa) â€”
+   fonte/altura continuam bem prÃ³ximas do tamanho normal, legÃ­vel, nÃ£o
+   uma miniatura. `flex-wrap` (herdado de `.rup-filters-row`) Ã© sÃ³ rede de
+   seguranÃ§a: se mesmo assim nÃ£o couber tudo, quebra pra 2Âª linha em vez de
    cortar/estourar a tela. */
 @media (max-width: 640px) and (orientation: portrait), (orientation: landscape) and (max-width: 1024px){
   .rup-filters{ margin-bottom:20px; }
@@ -1187,13 +1187,13 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .rup-filters .date-filter-chevron{ width:11px; height:11px; }
 }
 
-/* Em pé especificamente: ainda mais compacto que o bloco acima (5 rótulos
-   numa tela bem mais estreita que o deitado) — usuário confirmou que quer
-   todos numa linha só. Rótulos de dias/risco ficam ainda mais curtos aqui
+/* Em pÃ© especificamente: ainda mais compacto que o bloco acima (5 rÃ³tulos
+   numa tela bem mais estreita que o deitado) â€” usuÃ¡rio confirmou que quer
+   todos numa linha sÃ³. RÃ³tulos de dias/risco ficam ainda mais curtos aqui
    ("60 dias"/"Risco", ver Ruptura.jsx) e a setinha de cada uma some (a
-   caixinha já é clicável por si só). Coube tudo com folga sobrando —
-   usuário achou "grudado" na 1ª tentativa (padding/gap mínimos), aqui um
-   pouco mais respirado, ainda cabendo os 5 numa linha só. */
+   caixinha jÃ¡ Ã© clicÃ¡vel por si sÃ³). Coube tudo com folga sobrando â€”
+   usuÃ¡rio achou "grudado" na 1Âª tentativa (padding/gap mÃ­nimos), aqui um
+   pouco mais respirado, ainda cabendo os 5 numa linha sÃ³. */
 @media (max-width: 640px) and (orientation: portrait){
   .rup-filters-row{ gap:6px; }
   .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input{
@@ -1203,9 +1203,9 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 
 /* Legenda do donut de risco (bloquinhos com inicial + %): ainda menor nos
-   2 modos mobile — sobra mais espaço pro círculo do donut em si e deixa o
-   conjunto mais limpo. Só no donut da Ruptura (`.rup-donut-col`), não afeta
-   legendas de outros gráficos que usam a mesma classe genérica `.legend`. */
+   2 modos mobile â€” sobra mais espaÃ§o pro cÃ­rculo do donut em si e deixa o
+   conjunto mais limpo. SÃ³ no donut da Ruptura (`.rup-donut-col`), nÃ£o afeta
+   legendas de outros grÃ¡ficos que usam a mesma classe genÃ©rica `.legend`. */
 @media (max-width: 640px) and (orientation: portrait), (orientation: landscape) and (max-width: 1024px){
   .rup-donut-col .legend{ gap:5px 8px; margin-top:6px; justify-content:center; }
   .rup-donut-col .legend-item{ font-size:9px; gap:3px; }
@@ -1213,7 +1213,7 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .rup-donut-col .legend-val{ font-size:9px; }
 }
 
-/* Corre��o do menu de filtros estourando no mobile */
+/* Correção do menu de filtros estourando no mobile */
 @media (max-width: 800px) {
   .date-menu {
     position: fixed !important;
@@ -1227,3 +1227,4 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
     box-shadow: 0 0 0 100vw rgba(0,0,0,0.5), 0 18px 40px rgba(0,0,0,0.45) !important;
   }
 }
+
