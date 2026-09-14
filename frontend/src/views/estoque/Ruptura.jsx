@@ -220,10 +220,14 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
     let cancelled = false;
     (async () => {
       if (firstLoadDone.current) setFastLoading(true);
-      await fetchState();
+      const s = await fetchState();
       if (!cancelled) {
         setFastLoading(false);
         firstLoadDone.current = true;
+        // Nunca teve cache calculado (1ª vez que a tela é aberta, ou o
+        // arquivo de cache não existe) — dispara "Atualizar dados" sozinho
+        // em vez de deixar a tela parada esperando o usuário clicar.
+        if (s.status === 'idle') handleAtualizar();
       }
     })();
     return () => { cancelled = true; };
