@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
 import EmptyState from '../../components/EmptyState';
 import Ruptura from './Ruptura';
+import { useMobileLayout } from '../../utils/useMobileLayout';
 
 // Só Ruptura está pronta — as demais sub-abas ficam em manutenção
 // (visíveis no menu, sem apagar nada, só mostrando aviso em vez do
@@ -19,12 +20,46 @@ const SUBTABS = [
   { key: 'ruptura', label: 'Ruptura' },
 ];
 
+// Celular em pé: em vez da barra de abas (fica comprimida/difícil de ler
+// com até 8 rótulos numa tela estreita), mostra só o nome da sub-aba atual,
+// centralizado, com setas pra trocar — mesmo padrão visual já usado no
+// paginador de Configurações > Documentação (`.doc-paginador` e cia),
+// reaproveitado aqui em vez de criar um componente/CSS novo.
+function SubtabPaginador({ itens, indice, onIndice }) {
+  const atual = itens[indice];
+  return (
+    <div className="doc-paginador">
+      <button className="doc-pag-seta" onClick={() => onIndice(indice - 1)} disabled={indice === 0} aria-label="Sub-aba anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M15 6l-6 6 6 6" /></svg>
+      </button>
+      <div className="doc-pag-info">
+        <div className="doc-pag-titulo">{atual.label}</div>
+        <div className="doc-pag-dots">
+          {itens.map((it, i) => (
+            <button
+              key={it.key}
+              className={'doc-pag-dot' + (i === indice ? ' active' : '')}
+              onClick={() => onIndice(i)}
+              title={it.label}
+              aria-label={it.label}
+            />
+          ))}
+        </div>
+      </div>
+      <button className="doc-pag-seta" onClick={() => onIndice(indice + 1)} disabled={indice === itens.length - 1} aria-label="Próxima sub-aba">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+    </div>
+  );
+}
+
 // `active` agora é controlado pelo App (não é mais estado local daqui) —
 // é assim que o Topbar sabe qual sub-aba está selecionada pra saber o que
 // o botão único de "Sincronizar" deve disparar. `syncRef` é encaminhado
 // pra qualquer que seja a sub-aba renderizada no momento (só Ruptura e
 // Indisponível aceitam, por terem consulta pesada com "Atualizar dados").
 export default function Estoque({ filial, active, onActiveChange, syncRef, onSyncStatusChange }) {
+  const { portrait } = useMobileLayout();
   // Sub-abas ocultas temporariamente (Configurações > Estoque >
   // Visibilidade das sub-abas) — não apaga nada, só tira do menu e do
   // roteamento enquanto durar. "ruptura" nunca entra nessa lista (trava
@@ -51,20 +86,29 @@ export default function Estoque({ filial, active, onActiveChange, syncRef, onSyn
   }, [ocultas, active]);
 
   const ativoVisivel = !ocultas.includes(active);
+  const indiceAtivo = Math.max(0, subtabsVisiveis.findIndex(t => t.key === active));
 
   return (
     <>
-      <div className="subtabs">
-        {subtabsVisiveis.map(t => (
-          <button
-            key={t.key}
-            className={'subtab' + (active === t.key ? ' active' : '')}
-            onClick={() => onActiveChange(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {portrait ? (
+        <SubtabPaginador
+          itens={subtabsVisiveis}
+          indice={indiceAtivo}
+          onIndice={(i) => subtabsVisiveis[i] && onActiveChange(subtabsVisiveis[i].key)}
+        />
+      ) : (
+        <div className="subtabs">
+          {subtabsVisiveis.map(t => (
+            <button
+              key={t.key}
+              className={'subtab' + (active === t.key ? ' active' : '')}
+              onClick={() => onActiveChange(t.key)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div key={active} className="view-anim">
         {ativoVisivel && active === 'ruptura' && <Ruptura ref={syncRef} onSyncStatusChange={onSyncStatusChange} />}

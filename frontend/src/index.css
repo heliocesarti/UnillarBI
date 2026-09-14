@@ -1100,13 +1100,6 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .user-chip{ padding-left:8px; gap:0; }
   .user-chip .who{ display:none; }
 
-  /* Barra de sub-abas do Estoque (Geral/Ruptura/etc.): em vez de espremer
-     8 rótulos até truncar com "…", a barra vira scroll horizontal contido
-     (mesmo princípio já usado nas tabelas) — cada aba mantém a largura
-     natural do texto, nada é cortado. */
-  .subtabs{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .subtabs .subtab{ flex:0 0 auto; padding-left:14px; padding-right:14px; }
-
   .card{ padding:14px; }
   /* Cabeçalho do card: título em cima, ações embaixo, ocupando a largura
      toda — evita empurrar 2-4 botões pra fora da tela numa linha só.
