@@ -105,7 +105,7 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
             // pro desktop (a coluna aqui é bem mais estreita) — o nome
             // completo aparece ao tocar na barra (ver onClick abaixo),
             // pedido do usuário pra não ficar difícil de ler.
-            const effectiveTruncateAt = (portrait || landscape) ? Math.min(truncateAt, 6) : truncateAt;
+            const effectiveTruncateAt = (portrait || landscape) ? Math.min(truncateAt, 4) : truncateAt;
             const shortLabel = d.label.length > effectiveTruncateAt + 1 ? d.label.slice(0, effectiveTruncateAt) + '…' : d.label;
 
             // `selectedLabel` aceita tanto uma string única (uso antigo,
