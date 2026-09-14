@@ -6,6 +6,7 @@ import { api } from '../../api/client';
 import { theme, withSeriesColors } from '../../theme';
 import { fmtNum } from '../../utils/format';
 import { useCountUp } from '../../utils/useCountUp';
+import { useMobileLayout } from '../../utils/useMobileLayout';
 import { RANGES } from '../../constants/filtros';
 
 const CalendarIcon = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>;
@@ -130,6 +131,13 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
   // essa dimensão, então mudar aqui não deve afetar mais nada.
   const [dateRange, setDateRange] = useState('60');
   const dias = DIAS_MAP[dateRange] ?? 60;
+  const { portrait: mobilePortrait, isMobile } = useMobileLayout();
+  // Celular em pé: rótulos abreviados pra caber os 5 filtros numa linha só
+  // (pedido do usuário) — "Últimos 60 dias" -> "Últ. 60 dias" etc. Desktop
+  // e celular deitado continuam com o texto completo de sempre.
+  const rangesDisplay = mobilePortrait
+    ? RANGES.map(r => ({ ...r, label: r.label.replace('Últimos', 'Últ.') }))
+    : RANGES;
 
   const [state, setState] = useState({ status: 'idle', data: null, updatedAt: null, error: null });
   const [fastLoading, setFastLoading] = useState(false);
@@ -540,14 +548,14 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
       <div className="rup-filters">
         <div className="rup-filters-row">
 
-          <FilterDropdown icon={CalendarIcon} options={RANGES} selectedKey={dateRange} onSelect={setDateRange} footer="Vale só pra Ruptura — outras abas não têm janela de tempo." />
+          <FilterDropdown icon={mobilePortrait ? null : CalendarIcon} options={rangesDisplay} selectedKey={dateRange} onSelect={setDateRange} footer="Vale só pra Ruptura — outras abas não têm janela de tempo." />
 
           {/* Classificação de risco (Sanfona/Dropdown) */}
           <div className="rup-minimal-field">
             <details className="rup-minimal-dropdown" ref={riscoDetailsRef}>
               <summary className="rup-minimal-input" style={{ cursor: 'pointer' }}>
                 <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-primary)' }}>
-                  Classificação de risco
+                  {mobilePortrait ? 'Class. de risco' : 'Classificação de risco'}
                 </span>
                 <svg className="date-filter-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </summary>
@@ -564,9 +572,9 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
             </details>
           </div>
 
-          <MultiCheckDropdown label="Departamento" options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
+          <MultiCheckDropdown label={mobilePortrait ? 'Depto' : 'Departamento'} options={departamentoOptions} selected={selectedDepartamentos} onToggle={(v) => toggleEmSet(setSelectedDepartamentos, v)} />
           <MultiCheckDropdown label="Grupo" options={grupoOptions} selected={selectedGrupos} onToggle={(v) => toggleEmSet(setSelectedGrupos, v)} />
-          <MultiCheckDropdown label="Subgrupo" options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
+          <MultiCheckDropdown label={mobilePortrait ? 'Subgr' : 'Subgrupo'} options={subgrupoOptions} selected={selectedSubgrupos} onToggle={(v) => toggleEmSet(setSelectedSubgrupos, v)} />
 
           {/* Sincronizar e Limpar filtros agora ficam só no Topbar (ao lado
               da Filial) — disparam a ação da aba de Estoque selecionada. */}
@@ -602,6 +610,7 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
             selectedKeys={activeRiscos}
             onSegmentClick={(s) => toggleRisco(s.key)}
             size={148} strokeWidth={16}
+            compactLegend={isMobile}
           />
         </div>
       </div>

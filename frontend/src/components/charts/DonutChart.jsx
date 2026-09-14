@@ -3,7 +3,7 @@ import { theme } from '../../theme';
 import { fmtCurrency } from '../../utils/format';
 import { useTooltip } from '../../utils/TooltipContext';
 
-export default function DonutChart({ title, subtitle, data, centerFormatter = fmtCurrency, onSegmentClick, selectedKeys, size = 220, strokeWidth = 26 }) {
+export default function DonutChart({ title, subtitle, data, centerFormatter = fmtCurrency, onSegmentClick, selectedKeys, size = 220, strokeWidth = 26, compactLegend = false }) {
   const { showTooltip, hideTooltip } = useTooltip();
   const [hoverI, setHoverI] = useState(null);
 
@@ -54,11 +54,15 @@ export default function DonutChart({ title, subtitle, data, centerFormatter = fm
         {data.map((d, i) => (
           <div
             className="legend-item" key={i}
+            title={compactLegend ? d.label : undefined}
             style={{ cursor: onSegmentClick ? 'pointer' : 'default', opacity: selectedKeys && selectedKeys.size > 0 && !selectedKeys.has(d.key) ? 0.4 : 1 }}
             onClick={() => onSegmentClick && onSegmentClick(d, i)}
           >
             <span className="legend-swatch" style={{ background: d.color }} />
-            <span>{d.label}</span>
+            {/* Legenda compacta (mobile): só a inicial do rótulo — os
+                blocos de cor já bastam pra reconhecer qual é qual, evita a
+                legenda quebrar linha e esticar o card verticalmente. */}
+            <span>{compactLegend ? d.label.charAt(0).toUpperCase() : d.label}</span>
             <span className="legend-val">{((d.value / total) * 100).toFixed(1)}%</span>
           </div>
         ))}

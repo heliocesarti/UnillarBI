@@ -1137,6 +1137,23 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
   .kpi-grid-3 .kpi-value-row{ margin-top:4px; }
   .ruptura-grid .card{ padding:12px; }
   .rup-donut-col .chart-wrap svg{ max-width:220px; }
+
+  /* Linha de filtros (dias/risco/departamento/grupo/subgrupo): rótulos já
+     vêm abreviados do JSX ("Últ. 60 dias", "Class. de risco", "Depto",
+     "Subgr") — aqui só encolhe a caixinha (era largura fixa de 148px) pra
+     caber os 5 numa linha só. `flex-wrap` continua ligado (herdado de
+     `.rup-filters-row`) como rede de segurança: se um aparelho muito
+     estreito não couber tudo mesmo assim, quebra pra 2ª linha em vez de
+     cortar/estourar a tela. */
+  .rup-filters{ margin-bottom:20px; }
+  .rup-filters-row{ gap:5px; }
+  .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input{
+    width:auto; min-width:0; height:26px; padding:0 6px; gap:3px; font-size:10px;
+  }
+  .rup-filters .date-filter-btn span, .rup-filters .rup-minimal-input span{
+    white-space:nowrap; overflow:visible; text-overflow:clip;
+  }
+  .rup-filters .date-filter-chevron{ width:9px; height:9px; }
 }
 
 /* Celular deitado (paisagem): volta a se comportar como desktop — os 3
@@ -1147,4 +1164,13 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 @media (orientation: landscape) and (max-width: 1024px){
   .ruptura-grid{ grid-template-columns:repeat(3,1fr); }
   .kpi-grid-3{ grid-template-columns:repeat(3,1fr); }
+  /* `.ruptura-grid` herda `align-items:stretch` (regra base) — isso força
+     os 3 cards a ficarem todos com a altura do MAIOR (normalmente o donut,
+     quando a legenda de risco quebra linha numa coluna estreita), esticando
+     os 2 gráficos de barra por baixo e afastando o título das barras
+     (o chart-wrap centraliza verticalmente no espaço extra). Cada card
+     passa a ter só a própria altura natural — resolve os 2 problemas
+     junto (cards "esticados" + título longe das barras). */
+  .ruptura-grid{ align-items:start; }
+  .ruptura-grid .card{ padding:14px; }
 }
