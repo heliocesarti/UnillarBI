@@ -1164,13 +1164,12 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 @media (orientation: landscape) and (max-width: 1024px){
   .ruptura-grid{ grid-template-columns:repeat(3,1fr); }
   .kpi-grid-3{ grid-template-columns:repeat(3,1fr); }
-  /* `.ruptura-grid` herda `align-items:stretch` (regra base) — isso força
-     os 3 cards a ficarem todos com a altura do MAIOR (normalmente o donut,
-     quando a legenda de risco quebra linha numa coluna estreita), esticando
-     os 2 gráficos de barra por baixo e afastando o título das barras
-     (o chart-wrap centraliza verticalmente no espaço extra). Cada card
-     passa a ter só a própria altura natural — resolve os 2 problemas
-     junto (cards "esticados" + título longe das barras). */
-  .ruptura-grid{ align-items:start; }
+  /* Os 3 cards continuam com `align-items:stretch` (herdado da regra base,
+     igual desktop) — é isso que deixa os 3 do MESMO tamanho, pedido
+     explícito do usuário. O que fazia ficar "esticado" antes não era o
+     stretch em si, era a legenda do donut quebrando linha e inflando a
+     altura de referência — já resolvido com a legenda compacta (só a
+     inicial) e a altura menor do gráfico de barra (H=180 lá no
+     VCarouselChart.jsx) pra esse modo. */
   .ruptura-grid .card{ padding:14px; }
 }
