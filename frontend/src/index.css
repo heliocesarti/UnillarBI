@@ -1176,16 +1176,16 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
 }
 
 /* Em pé especificamente: ainda mais compacto que o bloco acima (5 rótulos
-   numa tela bem mais estreita que o deitado) — usuário confirmou 3x que
-   quer todos numa linha só, mesmo que precise abreviar/encolher mais.
-   Rótulos de dias/risco ficam ainda mais curtos aqui ("60 dias"/"Risco",
-   ver Ruptura.jsx), a caixinha encolhe mais (fonte/padding/gap menores) e
-   a setinha de cada uma some (a caixinha já é clicável por si só, e cada
-   ícone a menos sobra mais espaço pro texto). */
+   numa tela bem mais estreita que o deitado) — usuário confirmou que quer
+   todos numa linha só. Rótulos de dias/risco ficam ainda mais curtos aqui
+   ("60 dias"/"Risco", ver Ruptura.jsx) e a setinha de cada uma some (a
+   caixinha já é clicável por si só). Coube tudo com folga sobrando —
+   usuário achou "grudado" na 1ª tentativa (padding/gap mínimos), aqui um
+   pouco mais respirado, ainda cabendo os 5 numa linha só. */
 @media (max-width: 640px) and (orientation: portrait){
-  .rup-filters-row{ gap:3px; }
+  .rup-filters-row{ gap:6px; }
   .rup-filters .date-filter-btn, .rup-filters .rup-minimal-input{
-    height:26px; padding:0 5px; gap:0; font-size:10px;
+    height:27px; padding:0 8px; gap:0; font-size:10px;
   }
   .rup-filters .date-filter-chevron{ display:none; }
 }
