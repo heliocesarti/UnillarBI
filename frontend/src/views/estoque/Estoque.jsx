@@ -110,12 +110,25 @@ export default function Estoque({ filial, active, onActiveChange, syncRef, onSyn
         </div>
       )}
 
-      <div key={active} className="view-anim">
-        {ativoVisivel && active === 'ruptura' && <Ruptura ref={syncRef} onSyncStatusChange={onSyncStatusChange} />}
-        {ativoVisivel && !SUBTABS_ATIVAS.includes(active) && (
-          <EmptyState title={SUBTABS.find(t => t.key === active)?.label} message="Este ambiente está em manutenção." />
-        )}
+      {/* Ruptura fica montada o tempo todo (nunca desmonta), só escondida
+          via `hidden` quando não é a sub-aba ativa — antes tinha
+          `key={active}` na div em volta, que forçava desmontar/remontar
+          TUDO a cada troca de sub-aba. Ida-e-volta (ex: Ruptura ->
+          Indisponível -> Ruptura) perdia o estado carregado e reiniciava a
+          busca do zero, fazendo a tela "Nenhum dado carregado ainda"/
+          "Calculando..." reaparecer toda vez, mesmo já tendo carregado
+          antes na mesma sessão. Ruptura nunca fica oculta pelo config
+          (trava no backend), não precisa do `ativoVisivel` aqui. */}
+      <div hidden={active !== 'ruptura'} className={active === 'ruptura' ? 'view-anim' : undefined}>
+        <Ruptura ref={syncRef} onSyncStatusChange={onSyncStatusChange} />
       </div>
+      {active !== 'ruptura' && (
+        <div key={active} className="view-anim">
+          {ativoVisivel && !SUBTABS_ATIVAS.includes(active) && (
+            <EmptyState title={SUBTABS.find(t => t.key === active)?.label} message="Este ambiente está em manutenção." />
+          )}
+        </div>
+      )}
     </>
   );
 }
