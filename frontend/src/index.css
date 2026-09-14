@@ -1152,9 +1152,13 @@ nav.navlist{ display:flex; flex-direction:column; gap:3px; flex:1; }
      explícito do usuário. O que fazia ficar "esticado" antes não era o
      stretch em si, era a legenda do donut quebrando linha e inflando a
      altura de referência — já resolvido com a legenda compacta (só a
-     inicial), então o gráfico de barra volta a usar a mesma altura do
-     desktop (VCarouselChart.jsx). */
+     inicial). Altura/largura do viewBox do gráfico de barra (bem maiores
+     que antes) ficam no próprio VCarouselChart.jsx. */
   .ruptura-grid .card{ padding:14px; }
+  /* Título do card ("Departamento"/"Grupo") um pouco maior — pedido do
+     usuário, cada coluna aqui é estreita e o título original (13.5px)
+     ficava discreto demais. */
+  .ruptura-grid .card-title{ font-size:14.5px; }
 }
 
 /* Linha de filtros da Ruptura (dias/risco/departamento/grupo/subgrupo): em

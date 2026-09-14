@@ -19,19 +19,20 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
   const safePage = Math.min(page, maxPage);
   const visibleData = safeData.slice(safePage * ITEMS_PER_PAGE, (safePage + 1) * ITEMS_PER_PAGE);
 
-  // Celular em pé: a largura real do cartão fica bem menor que a dos
-  // cartões de desktop (que o gráfico foi desenhado pra preencher — 400
-  // unidades de largura no viewBox). Como o SVG escala tudo proporcionalmente
-  // (`width:100%`), renderizar as mesmas 400 unidades num cartão estreito
-  // encolhe o texto junto (uma fonte "11" vira uns 7px reais) — ilegível.
-  // Reduzindo o viewBox (W/H) só nesse caso, a MESMA largura em pixels reais
-  // passa a valer mais "zoom" (escala > 1).
-  // Celular deitado: mesma largura E altura do desktop (`height` = 220,
-  // prop default) — a redução de altura de uma rodada anterior não era o
-  // que deixava "esticado" (isso já foi resolvido pela legenda compacta do
-  // donut), só deixava a barra mais baixa/menos visível à toa.
-  const W = portrait ? 280 : 400;
-  const H = portrait ? 260 : height;
+  // Celular em pé OU deitado: a largura real do cartão (em pé é 1 coluna
+  // só; deitado são 3 lado a lado, cada coluna ainda mais estreita que 1
+  // coluna cheia) fica bem menor que a dos cartões de desktop, que o
+  // gráfico foi desenhado pra preencher (400 unidades de largura no
+  // viewBox). Como o SVG escala tudo proporcionalmente (`width:100%`),
+  // renderizar as mesmas 400 unidades num cartão estreito encolhe
+  // texto/barra junto — exatamente o que o usuário reportou no deitado
+  // ("barras desproporcional ao card... não dá pra ver os nomes"), porque
+  // aquele modo só reduzia H, nunca W. Reduzindo o viewBox (W) nos 2 casos,
+  // a MESMA largura em pixels reais passa a valer mais "zoom" (escala > 1)
+  // — barra, valor e nome do departamento crescem juntos. H mais alto
+  // (260) deixa a barra mais alta também, outro pedido explícito.
+  const W = portrait ? 280 : landscape ? 260 : 400;
+  const H = portrait || landscape ? 260 : height;
   const padL = 20, padR = 20, padT = 28, padB = 40;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const n = ITEMS_PER_PAGE;
@@ -40,6 +41,10 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
   // elas — barra bem mais grossa (até 60, era 34 pra todo mundo) deixa
   // muito mais visível/fácil de mirar, pedido do usuário.
   const barW = Math.min(landscape ? 60 : 34, slot * 0.6);
+  // Valor/nome em cima e embaixo da barra: fonte maior no deitado — o zoom
+  // do W menor já ajuda, mas o usuário pediu explicitamente mais visível.
+  const valueFontSize = landscape ? 13 : 11;
+  const labelFontSize = landscape ? 12 : 10.5;
 
   // Escala fixa pelo maior valor de TODO o conjunto (não só da página visível),
   // senão cada página reescala pro seu próprio topo e a sequência decrescente
@@ -109,9 +114,9 @@ export default function VCarouselChart({ title, subtitle, data, valueFormatter, 
               <g key={i}>
                 <path d={roundedBarPath(cx - barW / 2, barTop, barW, bh, 4)} fill={d.color || theme.series1} opacity={dimmed ? 0 : (hoverI === i ? 0.82 : 1)} />
                 {!dimmed && (
-                  <text x={cx} y={barTop - 8} textAnchor="middle" fontSize="11" fontWeight={isSelected ? "700" : "600"} fill={theme.textPrimary}>{valueFormatter ? valueFormatter(d.value) : d.value}</text>
+                  <text x={cx} y={barTop - 8} textAnchor="middle" fontSize={valueFontSize} fontWeight={isSelected ? "700" : "600"} fill={theme.textPrimary}>{valueFormatter ? valueFormatter(d.value) : d.value}</text>
                 )}
-                <text x={cx} y={H - 14} textAnchor="middle" fontSize="10.5" fontWeight={isSelected ? "700" : "400"} fill={isSelected ? theme.textPrimary : theme.textMuted}>{shortLabel}</text>
+                <text x={cx} y={H - 14} textAnchor="middle" fontSize={labelFontSize} fontWeight={isSelected ? "700" : "400"} fill={isSelected ? theme.textPrimary : theme.textMuted}>{shortLabel}</text>
                 <rect
                   x={padL + slot * i} y={padT} width={slot} height={plotH} fill="transparent" cursor="pointer"
                   onClick={() => onBarClick && onBarClick(d, i)}
