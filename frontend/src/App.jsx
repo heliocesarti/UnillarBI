@@ -4,6 +4,8 @@ import Topbar from './components/Topbar';
 import EmptyState from './components/EmptyState';
 import Estoque from './views/estoque/Estoque';
 import Configuracoes from './views/configuracoes/Configuracoes';
+import Login from './views/auth/Login';
+import { useAuth } from './auth/AuthContext';
 import { TooltipProvider } from './utils/TooltipContext';
 import { getTelaInicial } from './utils/telaInicial';
 import { api } from './api/client';
@@ -31,6 +33,8 @@ const ESTOQUE_SUBTITLES = {
 };
 
 export default function App() {
+  const { usuario, carregando, isAdmin, logout } = useAuth();
+
   // Ambiente inicial: preferência pessoal salva no navegador (Configurações
   // > Preferências > Tela inicial), padrão "estoque" enquanto os outros
   // ambientes estão em manutenção.
@@ -57,52 +61,69 @@ export default function App() {
   // mais aqui — é específico da Ruptura (outras abas não têm janela de
   // tempo) e vive dentro dela, pra mudar lá não afetar mais nada global.
   useEffect(() => {
+    if (!usuario) return;
     api.getConfig()
       .then(all => {
         const cfg = all.ruptura;
         if (cfg?.tela_filial_padrao) setFilial(cfg.tela_filial_padrao);
       })
       .catch(() => {});
-  }, []);
+  }, [usuario]);
 
   const [title, tituloSubtitle] = TITLES[activeView];
   const subtitle = activeView === 'estoque'
     ? (ESTOQUE_SUBTITLES[estoqueSubtab] ?? tituloSubtitle)
     : tituloSubtitle;
   // Sincronizar e Limpar filtros só fazem sentido quando uma sub-aba de
-  // Estoque com consulta/filtro próprio está selecionada.
+  // Estoque com consulta/filtro próprio está selecionada. Sincronizar,
+  // além disso, é ação restrita ao admin (só ele dispara a atualização
+  // pesada por enquanto) — Limpar filtros continua liberado pra todos.
   const mostrarAcoesEstoque = activeView === 'estoque' && ['ruptura'].includes(estoqueSubtab);
+  // Configurações também é restrita ao admin por enquanto — se por algum
+  // motivo activeView ficar 'configuracoes' sem ser admin (ex: sessão
+  // trocou de usuário na mesma aba), cai pra Estoque em vez de renderizar.
+  const viewEfetiva = activeView === 'configuracoes' && !isAdmin ? 'estoque' : activeView;
+
+  if (carregando) {
+    return <div className="login-screen"><div className="login-glow" /></div>;
+  }
+  if (!usuario) {
+    return <Login />;
+  }
 
   return (
     <TooltipProvider>
-      <div className="app-shell" data-ambiente={activeView}>
-        <Sidebar activeView={activeView} onNavigate={setActiveView} />
+      <div className="app-shell" data-ambiente={viewEfetiva}>
+        <Sidebar activeView={viewEfetiva} onNavigate={setActiveView} isAdmin={isAdmin} />
         <div className="main">
           <Topbar
             title={title} subtitle={subtitle}
             filial={filial} onFilialChange={setFilial}
-            mostrarFiltroFilial={!(activeView === 'estoque' && estoqueSubtab === 'ruptura')}
-            showSync={mostrarAcoesEstoque}
+            mostrarFiltroFilial={!(viewEfetiva === 'estoque' && estoqueSubtab === 'ruptura')}
+            showSync={mostrarAcoesEstoque && isAdmin}
             syncStatus={estoqueSyncStatus}
             onSincronizar={() => estoqueSyncRef.current?.sincronizar()}
             showLimparFiltros={mostrarAcoesEstoque}
             onLimparFiltros={() => estoqueSyncRef.current?.limparFiltros()}
+            usuario={usuario}
+            onLogout={logout}
           />
           <main className="content">
             <div className="view-anim">
-              {activeView === 'visao-geral' && <EmptyState title="Visão Geral" message="Este ambiente está em manutenção." />}
-              {activeView === 'vendas' && <EmptyState title="Vendas" message="Este ambiente está em manutenção." />}
-              {activeView === 'estoque' && (
+              {viewEfetiva === 'visao-geral' && <EmptyState title="Visão Geral" message="Este ambiente está em manutenção." />}
+              {viewEfetiva === 'vendas' && <EmptyState title="Vendas" message="Este ambiente está em manutenção." />}
+              {viewEfetiva === 'estoque' && (
                 <Estoque
                   filial={filial}
                   active={estoqueSubtab}
                   onActiveChange={setEstoqueSubtab}
                   syncRef={estoqueSyncRef}
                   onSyncStatusChange={setEstoqueSyncStatus}
+                  isAdmin={isAdmin}
                 />
               )}
-              {activeView === 'financeiro' && <EmptyState title="Financeiro" message="Este ambiente está em manutenção." />}
-              {activeView === 'configuracoes' && <Configuracoes />}
+              {viewEfetiva === 'financeiro' && <EmptyState title="Financeiro" message="Este ambiente está em manutenção." />}
+              {viewEfetiva === 'configuracoes' && <Configuracoes />}
             </div>
             <div className="page-footer">
               <span>

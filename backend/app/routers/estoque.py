@@ -2,14 +2,14 @@ import logging
 import threading
 import time
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from .. import data, error_reporting, excesso_query, indisponivel_query, ruptura_query
+from .. import auth, data, error_reporting, excesso_query, indisponivel_query, ruptura_query
 from ..cache import excesso_cache, indisponivel_cache, ruptura_cache
 
 logger = logging.getLogger("unillarbi.estoque")
 
-router = APIRouter(prefix="/api/estoque", tags=["estoque"])
+router = APIRouter(prefix="/api/estoque", tags=["estoque"], dependencies=[Depends(auth.get_usuario_atual)])
 
 
 @router.get("/geral")
@@ -70,7 +70,7 @@ def get_ruptura_classificacoes():
 
 
 @router.post("/ruptura/atualizar")
-def atualizar_ruptura():
+def atualizar_ruptura(usuario: dict = Depends(auth.exigir_admin)):
     started = ruptura_cache.start_computing()
     if not started:
         return {"status": "computing", "message": "Já existe uma atualização em andamento."}
@@ -110,7 +110,7 @@ def get_estoque_indisponivel(filial: str = "todas"):
 
 
 @router.post("/indisponivel/atualizar")
-def atualizar_indisponivel():
+def atualizar_indisponivel(usuario: dict = Depends(auth.exigir_admin)):
     started = indisponivel_cache.start_computing()
     if not started:
         return {"status": "computing", "message": "Já existe uma atualização em andamento."}
@@ -150,7 +150,7 @@ def get_estoque_excesso(dias: int = 60, filial: str = "todas"):
 
 
 @router.post("/excesso/atualizar")
-def atualizar_excesso():
+def atualizar_excesso(usuario: dict = Depends(auth.exigir_admin)):
     started = excesso_cache.start_computing()
     if not started:
         return {"status": "computing", "message": "Já existe uma atualização em andamento."}

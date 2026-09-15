@@ -58,7 +58,7 @@ function SubtabPaginador({ itens, indice, onIndice }) {
 // o botão único de "Sincronizar" deve disparar. `syncRef` é encaminhado
 // pra qualquer que seja a sub-aba renderizada no momento (só Ruptura e
 // Indisponível aceitam, por terem consulta pesada com "Atualizar dados").
-export default function Estoque({ filial, active, onActiveChange, syncRef, onSyncStatusChange }) {
+export default function Estoque({ filial, active, onActiveChange, syncRef, onSyncStatusChange, isAdmin }) {
   const { portrait } = useMobileLayout();
   // Sub-abas ocultas temporariamente (Configurações > Estoque >
   // Visibilidade das sub-abas) — não apaga nada, só tira do menu e do
@@ -120,7 +120,7 @@ export default function Estoque({ filial, active, onActiveChange, syncRef, onSyn
           antes na mesma sessão. Ruptura nunca fica oculta pelo config
           (trava no backend), não precisa do `ativoVisivel` aqui. */}
       <div hidden={active !== 'ruptura'} className={active === 'ruptura' ? 'view-anim' : undefined}>
-        <Ruptura ref={syncRef} onSyncStatusChange={onSyncStatusChange} />
+        <Ruptura ref={syncRef} onSyncStatusChange={onSyncStatusChange} isAdmin={isAdmin} />
       </div>
       {active !== 'ruptura' && (
         <div key={active} className="view-anim">

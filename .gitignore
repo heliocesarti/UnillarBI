@@ -6,6 +6,7 @@ __pycache__/
 .ruptura_cache.json
 .indisponivel_cache.json
 .excesso_cache.json
+.app_data.sqlite
 dist/
 backend_log.txt
 frontend_log.txt

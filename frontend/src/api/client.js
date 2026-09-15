@@ -1,28 +1,63 @@
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
+let authToken = null;
+let onUnauthorized = null;
+
+export function setAuthToken(token) {
+  authToken = token;
+}
+
+// Chamado (pelo AuthContext) toda vez que uma chamada volta 401 — sessao
+// expirada ou token invalido. Devolve o usuario pra tela de login.
+export function setUnauthorizedHandler(fn) {
+  onUnauthorized = fn;
+}
+
+function authHeaders(extra = {}) {
+  return authToken ? { ...extra, Authorization: `Bearer ${authToken}` } : extra;
+}
+
+async function handleUnauthorized(res, path) {
+  if (res.status === 401 && onUnauthorized) onUnauthorized();
+  let detail = null;
+  try {
+    detail = (await res.json())?.detail;
+  } catch {
+    /* corpo nao era JSON, segue com mensagem generica */
+  }
+  throw new Error(detail || `Falha ao chamar ${path}: ${res.status}`);
+}
+
 async function getJson(path) {
-  const res = await fetch(API_BASE + path);
-  if (!res.ok) throw new Error(`Falha ao buscar ${path}: ${res.status}`);
+  const res = await fetch(API_BASE + path, { headers: authHeaders() });
+  if (!res.ok) return handleUnauthorized(res, path);
   return res.json();
 }
 
-async function postJson(path) {
-  const res = await fetch(API_BASE + path, { method: 'POST' });
-  if (!res.ok) throw new Error(`Falha ao chamar ${path}: ${res.status}`);
+async function postJson(path, body) {
+  const res = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: authHeaders(body ? { 'Content-Type': 'application/json' } : {}),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) return handleUnauthorized(res, path);
   return res.json();
 }
 
 async function putJson(path, body) {
   const res = await fetch(API_BASE + path, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Falha ao chamar ${path}: ${res.status}`);
+  if (!res.ok) return handleUnauthorized(res, path);
   return res.json();
 }
 
 export const api = {
+  login: (login, senha) => postJson('/api/auth/login', { login, senha }),
+  me: () => getJson('/api/auth/me'),
+
   getVisaoGeral: () => getJson('/api/visao-geral'),
   getVendas: () => getJson('/api/vendas'),
   getEstoqueGeral: () => getJson('/api/estoque/geral'),

@@ -1,8 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from .. import data
+from .. import auth, data
 
-router = APIRouter(prefix="/api/visao-geral", tags=["visao-geral"])
+router = APIRouter(prefix="/api/visao-geral", tags=["visao-geral"], dependencies=[Depends(auth.get_usuario_atual)])
 
 
 @router.get("")

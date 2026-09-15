@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-from .. import config_registry, query_config
+from .. import auth, config_registry, query_config
 
-router = APIRouter(prefix="/api/config", tags=["config"])
+router = APIRouter(prefix="/api/config", tags=["config"], dependencies=[Depends(auth.get_usuario_atual)])
 
 
 @router.get("")
@@ -18,7 +18,7 @@ def get_registry():
 
 
 @router.put("/ruptura")
-def update_ruptura_config(cfg: dict):
+def update_ruptura_config(cfg: dict, usuario: dict = Depends(auth.exigir_admin)):
     try:
         query_config.validate_ruptura_config(cfg)
     except (ValueError, KeyError) as e:
@@ -28,12 +28,12 @@ def update_ruptura_config(cfg: dict):
 
 
 @router.post("/ruptura/reset")
-def reset_ruptura_config():
+def reset_ruptura_config(usuario: dict = Depends(auth.exigir_admin)):
     return query_config.reset_config("ruptura")
 
 
 @router.put("/indisponivel")
-def update_indisponivel_config(cfg: dict):
+def update_indisponivel_config(cfg: dict, usuario: dict = Depends(auth.exigir_admin)):
     try:
         query_config.validate_indisponivel_config(cfg)
     except (ValueError, KeyError) as e:
@@ -43,12 +43,12 @@ def update_indisponivel_config(cfg: dict):
 
 
 @router.post("/indisponivel/reset")
-def reset_indisponivel_config():
+def reset_indisponivel_config(usuario: dict = Depends(auth.exigir_admin)):
     return query_config.reset_config("indisponivel")
 
 
 @router.put("/visibilidade")
-def update_visibilidade_config(cfg: dict):
+def update_visibilidade_config(cfg: dict, usuario: dict = Depends(auth.exigir_admin)):
     try:
         query_config.validate_visibilidade_config(cfg)
     except (ValueError, KeyError) as e:
@@ -58,5 +58,5 @@ def update_visibilidade_config(cfg: dict):
 
 
 @router.post("/visibilidade/reset")
-def reset_visibilidade_config():
+def reset_visibilidade_config(usuario: dict = Depends(auth.exigir_admin)):
     return query_config.reset_config("visibilidade")

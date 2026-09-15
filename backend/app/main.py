@@ -5,9 +5,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from . import error_reporting
+from . import auth_db, error_reporting
 from .logging_setup import setup_logging
-from .routers import config, estoque, financeiro, vendas, visao_geral
+from .routers import auth as auth_router, config, estoque, financeiro, vendas, visao_geral
 from .watchdog import start_watchdog
 
 setup_logging()
@@ -21,9 +21,10 @@ if cors_origins:
         CORSMiddleware,
         allow_origins=cors_origins,
         allow_methods=["GET", "POST", "PUT"],
-        allow_headers=["Content-Type"],
+        allow_headers=["Content-Type", "Authorization"],
     )
 
+app.include_router(auth_router.router)
 app.include_router(visao_geral.router)
 app.include_router(vendas.router)
 app.include_router(estoque.router)
@@ -40,6 +41,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 @app.on_event("startup")
 def _on_startup():
     logger.info("Backend iniciado.")
+    auth_db.init_db()
     start_watchdog()
 
 

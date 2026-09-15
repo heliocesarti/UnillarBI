@@ -125,7 +125,7 @@ function MultiCheckDropdown({ label, options, selected, onToggle }) {
   );
 }
 
-const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
+const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange, isAdmin }, ref) {
   // Filtro de dias é local da Ruptura (não fica mais no Topbar global) —
   // só ela usa janela de tempo pra vendas; outras abas de Estoque não têm
   // essa dimensão, então mudar aqui não deve afetar mais nada.
@@ -227,7 +227,9 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
         // Nunca teve cache calculado (1ª vez que a tela é aberta, ou o
         // arquivo de cache não existe) — dispara "Atualizar dados" sozinho
         // em vez de deixar a tela parada esperando o usuário clicar.
-        if (s.status === 'idle') handleAtualizar();
+        // Só o admin pode disparar (sincronizar é restrito); um usuário
+        // comum só vê a mensagem de espera abaixo.
+        if (s.status === 'idle' && isAdmin) handleAtualizar();
       }
     })();
     return () => { cancelled = true; };
@@ -532,8 +534,14 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
         <div className="empty-state">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>
           <h3>Nenhum dado carregado ainda</h3>
-          <p>A consulta é pesada (pode levar alguns minutos) — clique para calcular a partir do banco de dados.</p>
-          <div style={{ marginTop: 10 }}><AtualizarBtn label="Atualizar dados" /></div>
+          {isAdmin ? (
+            <>
+              <p>A consulta é pesada (pode levar alguns minutos) — clique para calcular a partir do banco de dados.</p>
+              <div style={{ marginTop: 10 }}><AtualizarBtn label="Atualizar dados" /></div>
+            </>
+          ) : (
+            <p>Aguardando o administrador sincronizar os dados pela primeira vez.</p>
+          )}
         </div>
       </div>
     );
@@ -558,7 +566,7 @@ const Ruptura = forwardRef(function Ruptura({ onSyncStatusChange }, ref) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>
           <h3>Erro ao calcular</h3>
           <p>{state.error}</p>
-          <div style={{ marginTop: 10 }}><AtualizarBtn label="Tentar novamente" /></div>
+          {isAdmin && <div style={{ marginTop: 10 }}><AtualizarBtn label="Tentar novamente" /></div>}
         </div>
       </div>
     );
